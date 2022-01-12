@@ -342,7 +342,7 @@ class Actividades
      */
     public function getJson()
     {
-        return array("IdActividad"=>$this->getIdActividad(), "IdDepartamento"=>$this->getIdDepartamento(), "IdJefePersonal"=>$this->getIdJefePersonal(), $this->getIdPersonal(), $this->getIdTipoProyecto(), $this->getNombre(), $this->getHorario(), $this->getPeriodo(), $this->getOficioAutorizacion(), $this->getFechaInicio(), $this->getFechaCierre(), $this->getCreditos(), $this->getHoras(), $this->getNoAlumnos(), $this->getEstatus());
+        return array("Id_Actividad"=>$this->getIdActividad(), "Id_Departamento"=>$this->getIdDepartamento(), "Id_JefePersonal"=>$this->getIdJefePersonal(), "Id_Personal"=>$this->getIdPersonal(), "Id_Tipo_Proyecto"=>$this->getIdTipoProyecto(), "Nombre_Actividad"=>$this->getNombre(), "Horario"=>$this->getHorario(), "Periodo"=>$this->getPeriodo(), "Oficio_Autorizacion"=>$this->getOficioAutorizacion(), "Fecha_Inicio"=>$this->getFechaInicio(), "Fecha_Cierre"=>$this->getFechaCierre(), "Creditos"=>$this->getCreditos(), "Horas"=>$this->getHoras(), "Numero_Alumnos"=>$this->getNoAlumnos(), "Estatus"=>$this->getEstatus());
     }
 
 

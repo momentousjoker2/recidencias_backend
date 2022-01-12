@@ -144,7 +144,7 @@ class Solicitud_Actividad
      */
     public function getJson()
     {
-        return  array($this->getIdSolicitud(),$this->getIdActividad(), $this->getIdEstudiante(), $this->getIdActividad(), $this->getStatus(), $this->getFechaCreacion(), $this->getMensaje());
+        return  array("Id_Solicitud"=>$this->getIdSolicitud(), "Id_Alumno"=>$this->getIdEstudiante(), "Id_Actividad"=>$this->getIdActividad(), "Estatus"=>$this->getStatus(), "Fecha_Creacion"=>$this->getFechaCreacion(), "Mensaje"=>$this->getMensaje());
     }
 
 }

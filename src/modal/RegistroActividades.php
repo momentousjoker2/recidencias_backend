@@ -121,7 +121,7 @@ class RegistroActividades
      */
     public function getJson()
     {
-        return  array($this->getIdRegistro(), $this->getIdEstudiante(), $this->getIdActividad(), $this->getEstado(), $this->getCalificacion());
+        return  array("Id_Registro"=>$this->getIdRegistro(), "Id_Alumno"=>$this->getIdEstudiante(), "Id_Actividad"=>$this->getIdActividad(), "Estado"=>$this->getEstado(), "Calificacion"=>$this->getCalificacion());
     }
 
 }

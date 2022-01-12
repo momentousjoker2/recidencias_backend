@@ -145,10 +145,7 @@ class empleados
      */
     public function getJson()
     {
-        return  array($this->getIDPERS(), $this->getNOMPERS(), $this->getIDDEPTO(), $this->getPwd(), $this->getFirmaDigital(), $this->getPuesto());
+        return  array("Id_Personal"=>$this->getIDPERS(), "Nombre_Personal"=>$this->getNOMPERS(), "Id_Departamento"=>$this->getIDDEPTO(), "Contraseña"=>$this->getPwd(), "Firma_Digital"=>$this->getFirmaDigital(), "Puesto"=>$this->getPuesto());
     }
-
-
-
 
 }

@@ -188,7 +188,11 @@ class estudiantes
      */
     public function getJson()
     {
+<<<<<<< Updated upstream
         return  array("Numero de control"=>$this->getNc(),$this->getAp(),$this->getAm(),$this->getNomalu(),$this->getIdCar(),$this->getSemestre(),$this->getFirmaDigital(),$this->getPassword());
+=======
+        return  array("Numero_Control"=>$this->getNc(), "Apellido_Paterno"=>$this->getAp(), "Apellido_Materno"=>$this->getAm(), "Nombre_Alumno"=>$this->getNomalu(), "Id_Carrera"=>$this->getIdCar(), "Semestre"=>$this->getSemestre(), "Firma_Digital"=>$this->getFirmaDigital(),"Contraseña"=>$this->getPassword());
+>>>>>>> Stashed changes
     }
 
 

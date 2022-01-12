@@ -76,7 +76,7 @@ class Tipo_Proyecto{
      */
     public function getJson()
     {
-        return array($this->getIdTipoProyecto(), $this->getNombreTipo(),$this->getDescripcion());
+        return array("Id_Tipo_Proyecto"=>$this->getIdTipoProyecto(), "Nombre_Tipo_Proyecto"=>$this->getNombreTipo(), "Descripcion"=>$this->getDescripcion());
     }
 
 

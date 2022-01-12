@@ -230,6 +230,6 @@ class calificacion
      */
     public function getJson()
     {
-        return array($this->getIdRegistro(), $this->getIdEstudiante(), $this->getPregunta1(), $this->getPregunta2(), $this->getPregunta3(), $this->getPregunta4(), $this->getPregunta5(), $this->getPregunta6(), $this->getPregunta7(), $this->getObservaciones());
+        return array("Id_Registro"=>$this->getIdRegistro(), "Id_Estudiante"=>$this->getIdEstudiante(), "Pimer_Pregunta"=>$this->getPregunta1(), "Segunda_Pregunta"=>$this->getPregunta2(), "Tercer_Pregunta"=>$this->getPregunta3(), "Cuarta_Pregunta"=>$this->getPregunta4(), "Quinta_Pregunta"=>$this->getPregunta5(), "Sexta_Pregunta"=>$this->getPregunta6(), "Septima_Pregunta"=>$this->getPregunta7(), "Observaciones"=>$this->getObservaciones());
     }
 }
