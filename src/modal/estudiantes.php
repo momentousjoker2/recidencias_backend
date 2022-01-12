@@ -188,7 +188,7 @@ class estudiantes
      */
     public function getJson()
     {
-        return  array($this->getNc(),$this->getAp(),$this->getAm(),$this->getNomalu(),$this->getIdCar(),$this->getSemestre(),$this->getFirmaDigital(),$this->getPassword());
+        return  array("Numero de control"=>$this->getNc(),$this->getAp(),$this->getAm(),$this->getNomalu(),$this->getIdCar(),$this->getSemestre(),$this->getFirmaDigital(),$this->getPassword());
     }
 
 

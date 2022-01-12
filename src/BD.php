@@ -31,15 +31,13 @@ class DB
     function isTypeUser(String $username):String{
         $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc ');
         $stmt->bindParam(":nc", $username);
-        $stmt->bindParam(":password", $password);
         $stmt->execute();
         $contar=$stmt->rowCount();
         if($contar==1){
             return "Estudiante";
         }else{
             $stmt = $this->pdo->prepare('SELECT  *  FROM Empleado where id_pers = :id_pers ');
-            $stmt->bindParam(":id_pers", $id_pers);
-            $stmt->bindParam(":pwd", $pwd);
+            $stmt->bindParam(":id_pers", $username);
             $stmt->execute();
             $contar=$stmt->rowCount();
             if($contar==1){

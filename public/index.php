@@ -24,21 +24,37 @@ $app->get('/', function (Request $request, Response $response, array $args) {
 
     return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response, $autenticacion);
 });
-$app->post('/login', function (Request $request, Response $response, array $args) {
+$app->post('/login', function (Request $request, Response $response) {
+        $data= array();
         $autenticacion = authenticate(apache_request_headers());
         $bd = new DB();
 
-        $type = $bd->isTypeUser($_POST['usuario'],$_POST['password']);
-        if ($type == 'Estudiante'){
-            var_dump($bd->getLoginEstudiantes($_POST['usuario'],$_POST['password']));
-        }else if($type == 'Empleado'){
-            var_dump($bd->getLoginEstudiantes($_POST['usuario'],$_POST['password']));
+        if(verifyRequiredParams($_POST,2)){
+            $usuario = $_POST['usuario'];
+            $password = $_POST['password'];
+        
+
+
+            $type = $bd->isTypeUser($usuario);
+            if ($type == 'Estudiante'){
+                $data = $bd->getLoginEstudiantes($usuario,$password);
+            }else if($type == 'Empleado'){
+                $data = $bd->getLoginEstudiantes($usuario,$password);
+            }else{
+                $data["error"] = true;
+                $data["message"] = "Usuario no encontrado";
+                $data["code"] = "2005";
+            }
+
         }else{
-            return echoResponse(200, json_encode(array("data" => "Login No encotrado",), JSON_FORCE_OBJECT), $response, $autenticacion);
+            $data["error"] = true;
+            $data["message"] = "Datos no aceptados";
+            $data["code"] = "2004";
         }
+        
+        //var_dump($array);
 
-
-        return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response, $autenticacion);
+        return echoResponse(200, json_encode($data, JSON_FORCE_OBJECT), $response, $autenticacion);   
     });
 
 
@@ -268,8 +284,7 @@ $app->group('/Calificacion', function (RouteCollectorProxy $group) use ($app) {
  * @param array $hedear Hedear de la peticion http del cual se extrae los atributos el host y el Authorization
  * @return array Regresa un arreglo llamado data el cual espesifica si contiene errores y cual el codigo de este mismo
  */
-function authenticate(array $hedear): array
-{
+function authenticate(array $hedear): array {
     $data = array();
     if (isset($hedear['Host'])) {
         $bd = new DB();
@@ -305,30 +320,25 @@ function authenticate(array $hedear): array
 }
 
 
-function verifyRequiredParams(array $required_fields): array
-{
+function verifyRequiredParams(array $parametros,int $cont): bool {
     $data = array();
-    foreach ($required_fields as $field) {
-        if (!isset($request_params[$field]) || strlen(trim($request_params[$field])) <= 0) {
-            $data["error"] = true;
-            $data["message"] = "Error en datos";
-            $data["code"] = "2004";
-            return $data;
+    foreach ($parametros as $field) {
+        if(isset($field)){
+            if(ctype_print($field)){
+                if(!empty($field)){
+                    $data[]=$field;
+                }
+            }
         }
     }
-    $data["error"] = false;
-    return $data;
+
+    if(count($data)==$cont)
+        return true;
+    else
+        return false;
 }
 
-/**
- * @param int $status_code
- * @param string $data
- * @param Response $response
- * @param array $autheticacion
- * @return Response
- */
-function echoResponse(int $status_code, string $data, Response $response, array $autheticacion): Response
-{
+function echoResponse(int $status_code, string $data, Response $response, array $autheticacion): Response {
 
     if ($autheticacion['error']) {
         $response->getBody()->write(json_encode($autheticacion, JSON_FORCE_OBJECT));
@@ -340,4 +350,6 @@ function echoResponse(int $status_code, string $data, Response $response, array 
 
     return $response->withStatus($status_code)->withHeader('Content-Type', 'application/json');
 }
+
+
 $app->run();
