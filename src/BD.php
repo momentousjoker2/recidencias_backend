@@ -600,7 +600,7 @@ class DB
             $itm->setPwd($row['pwd']);
             $itm->setFirmaDigital($row['firmadigital']);
             $itm->setPuesto($row['puesto']);
-            $this->array[] = $itm->getJson();
+            $this->array['Empleado'] = $itm->getJson();
         }
 
         return $this->array;
@@ -622,7 +622,7 @@ class DB
                 $itm->setSemestre($row['semestre']);
                 $itm->setFirmaDigital($row['firmadigital']);
                 $itm->setPassword($row['password']);
-                $this->array[] = $itm->getJson();
+                $this->array['Estudiante'] = $itm->getJson();
         }
 
         return $this->array;

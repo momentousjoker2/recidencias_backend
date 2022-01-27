@@ -5,7 +5,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Factory\AppFactory;
 
-header("Access-Control-Allow-Origin: *");
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: PUT, GET, POST, DELETE');
 header("Access-Control-Allow-Headers: X-Requested-With");
@@ -38,8 +37,10 @@ $app->post('/login', function (Request $request, Response $response) {
             $type = $bd->isTypeUser($usuario);
             if ($type == 'Estudiante'){
                 $data = $bd->getLoginEstudiantes($usuario,$password);
+                $data["typeuser"]="Estudiante";
             }else if($type == 'Empleado'){
                 $data = $bd->getLoginEstudiantes($usuario,$password);
+                    $data["typeuser"]="Empleado";
             }else{
                 $data["error"] = true;
                 $data["message"] = "Usuario no encontrado";
@@ -52,7 +53,6 @@ $app->post('/login', function (Request $request, Response $response) {
             $data["code"] = "2004";
         }
         
-        //var_dump($array);
 
         return echoResponse(200, json_encode($data, JSON_FORCE_OBJECT), $response, $autenticacion);   
     });
@@ -286,10 +286,12 @@ $app->group('/Calificacion', function (RouteCollectorProxy $group) use ($app) {
  */
 function authenticate(array $hedear): array {
     $data = array();
-    if (isset($hedear['Host'])) {
+        if (isset($hedear['HOST'])) {
         $bd = new DB();
-        if ($bd->isValidHost($hedear['Host'])) {
+        if ($bd->isValidHost($hedear['HOST'])) {
+
             if (isset($hedear['Authorization'])) {
+                
                 if ($bd->isValidApiKey($hedear['Authorization'])) {
                     $data["error"] = false;
                     return $data;
@@ -331,7 +333,6 @@ function verifyRequiredParams(array $parametros,int $cont): bool {
             }
         }
     }
-
     if(count($data)==$cont)
         return true;
     else
