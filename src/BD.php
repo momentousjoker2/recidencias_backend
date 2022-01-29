@@ -18,16 +18,7 @@ class DB
         $this->pdoITCG = $this->db->createConnexiconITCG();
         $this->array = array();
     }
-
-    function isValidApiKey(string $key): bool {
-        return strcmp($key, key) == 0;
-        //return $key==key;
-    }
-
-    function isValidHost(string $host): bool {
-        return true;
-    }
-
+    //Inicia funcion de login
     function isTypeUser(String $username):String{
         $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc ');
         $stmt->bindParam(":nc", $username);
@@ -40,14 +31,59 @@ class DB
             $stmt->bindParam(":id_pers", $username);
             $stmt->execute();
             $contar=$stmt->rowCount();
+            $types = $stmt->fetch();
+
             if($contar==1){
-                return "Empleado";
+                return $types['puesto'];
             }else{
                 return "No existe";
             }
         }
     }
+        public function getLoginEmpleados(String $id_pers, String $pwd): array {
+        $stmt = $this->pdo->prepare('SELECT  *  FROM Empleado where id_pers = :id_pers and pwd = :pwd');
+        $stmt->bindParam(":id_pers", $id_pers);
+        $stmt->bindParam(":pwd", $pwd);
+        $stmt->execute();
 
+        foreach ($stmt as $row) {
+            $itm = new empleados();
+            $itm->setIDPERS($row['id_pers']);
+            $itm->setNOMPERS($row['nom_pers']);
+            $itm->setIDDEPTO($row['id_depto']);
+            $itm->setPwd($row['pwd']);
+            $itm->setFirmaDigital($row['firmadigital']);
+            $itm->setPuesto($row['puesto']);
+            $this->array['Empleado'] = $itm->getJson();
+        }
+
+        return $this->array;
+    }
+
+    public function getLoginEstudiantes(String $nc, String $password): array {
+        $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc and password = :password');
+        $stmt->bindParam(":nc", $nc);
+        $stmt->bindParam(":password", $password);
+        $stmt->execute();
+
+        foreach ($stmt as $row) {
+                $itm = new estudiantes();
+                $itm->setNc($row['nc']);
+                $itm->setAp($row['ap']);
+                $itm->setAm($row['am']);
+                $itm->setNomalu($row['nomalu']);
+                $itm->setIdCar($row['idcar']);
+                $itm->setSemestre($row['semestre']);
+                $itm->setFirmaDigital($row['firmadigital']);
+                $itm->setPassword($row['password']);
+                $this->array['Estudiante'] = $itm->getJson();
+        }
+
+        return $this->array;
+    }
+    //TERMINA LOGIN
+    
+    //Catalagos inicio
     public function getAllCarreras(): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Carreras');
         $stmt->execute();
@@ -60,6 +96,113 @@ class DB
         }
         return $this->array;
     }
+    
+    public function getAllDepartamentos(): array {
+        $stmt = $this->pdo->prepare('SELECT * FROM Deptos');
+        $stmt->execute();
+        foreach ($stmt as $row) {
+            $itm = new departamentos();
+            $itm->setIDDEPTO($row['id_depto']);
+            $itm->setNOMDEPTO($row['nom_depto']);
+            $this->array[] = $itm->getJson();
+        }
+        return $this->array;
+    }
+    
+    public function getAllEmpleados(): array {
+        $stmt = $this->pdo->prepare('SELECT e.id_pers, e.nom_pers, d.NOM_DEPTO as id_depto, e.pwd, e.firmadigital, e.puesto FROM Empleado as e INNER JOIN Deptos as d on d.ID_DEPTO = e.ID_DEPTO');
+        $stmt->execute();
+        foreach ($stmt as $row) {
+            $itm = new empleados();
+            $itm->setIDPERS($row['id_pers']);
+            $itm->setNOMPERS($row['nom_pers']);
+            $itm->setIDDEPTO($row['id_depto']);
+            $itm->setPwd($row['pwd']);
+            $itm->setFirmaDigital($row['firmadigital']);
+            $itm->setPuesto($row['puesto']);
+            $this->array[] = $itm->getJson();
+        }
+        return $this->array;
+    }
+    public function  getAllEstudiantes(): array {
+        $stmt = $this->pdo->prepare('SELECT e.nc,e.ap,e.am,e.nomalu,c.NombreCar as idcar,e.semestre,e.firmadigital,e.password FROM Estudiantes as e inner JOIN Carreras as c on e.IdCar=c.IdCar');
+        $stmt->execute();
+        foreach ($stmt as $row) {
+            $itm = new estudiantes();
+            $itm->setNc($row['nc']);
+            $itm->setAp($row['ap']);
+            $itm->setAm($row['am']);
+            $itm->setNomalu($row['nomalu']);
+            $itm->setIdCar($row['idcar']);
+            $itm->setSemestre($row['semestre']);
+            $itm->setFirmaDigital($row['firmadigital']);
+            $itm->setPassword($row['password']);
+            $this->array[] = $itm->getJson();
+        }
+
+        return $this->array;
+    }
+
+    public function  getAllTipoProyecto(): array {
+        $stmt = $this->pdo->prepare('SELECT * FROM Tipo_Proyecto');
+        $stmt->execute();
+        foreach ($stmt as $row) {
+            $itm = new Tipo_Proyecto();
+            $itm->setIdTipoProyecto($row['idtipoproyecto']);
+            $itm->setNombreTipo($row['nombretipo']);
+            $itm->setDescripcion($row['descripcion']);
+            $this->array[] = $itm->getJson();
+        }
+
+        return $this->array;
+    }
+
+    public function  insertTipoProyecto(String $nombretipo,String $descripcion):bool {
+        try {
+            $stmt = $this->pdo->prepare('INSERT INTO Tipo_Proyecto(nombretipo,descripcion) value (:nombretipo,:descripcion) ');
+            $stmt->bindParam(":nombretipo", $nombretipo);
+            $stmt->bindParam(":descripcion", $descripcion);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function insertCarrera(): bool {
         try {
@@ -99,17 +242,7 @@ class DB
         return true;
     }
 
-    public function getAllDepartamentos(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Deptos');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new departamentos();
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setNOMDEPTO($row['nom_depto']);
-            $this->array[] = $itm->getJson();
-        }
-        return $this->array;
-    }
+   
 
     public function insertDepartamentos():bool {
         try {
@@ -148,21 +281,7 @@ class DB
         return true;
     }
 
-    public function getAllEmpleados(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Empleado');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new empleados();
-            $itm->setIDPERS($row['id_pers']);
-            $itm->setNOMPERS($row['nom_pers']);
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setPwd($row['pwd']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPuesto($row['puesto']);
-            $this->array[] = $itm->getJson();
-        }
-        return $this->array;
-    }
+
 
     public function getEmpleado(int $id): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Empleado where id_pers = :id');
@@ -230,24 +349,7 @@ class DB
         return true;
     }
 
-    public function  getAllEstudiantes(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new estudiantes();
-            $itm->setNc($row['nc']);
-            $itm->setAp($row['ap']);
-            $itm->setAm($row['am']);
-            $itm->setNomalu($row['nomalu']);
-            $itm->setIdCar($row['idcar']);
-            $itm->setSemestre($row['semestre']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPassword($row['password']);
-            $this->array[] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
+ 
 
     public function  getEstudiante(int $nc): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc');
@@ -324,19 +426,7 @@ class DB
         return true;
     }
 
-    public function  getAllTipoProyecto(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Tipo_Proyecto');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new Tipo_Proyecto();
-            $itm->setIdTipoProyecto($row['idtipoproyecto']);
-            $itm->setNombreTipo($row['nombretipo']);
-            $itm->setDescripcion($row['descripcion']);
-            $this->array[] = $itm->getJson();
-        }
 
-        return $this->array;
-    }
 
     public function  getTipoProyecto(int $id): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Tipo_Proyecto where idtipoproyecto = :id');
@@ -353,18 +443,7 @@ class DB
         return $this->array;
     }
 
-    public function  insertTipoProyecto(int $idtipoproyecto,String $nombretipo,String $descripcion):bool {
-        try {
-            $stmt = $this->pdo->prepare('INSERT INTO Tipo_Proyecto(idtipoproyecto,nombretipo,descripcion) value (:idtipoproyecto,:nombretipo,:descripcion) ');
-            $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
-            $stmt->bindParam(":nombretipo", $nombretipo);
-            $stmt->bindParam(":descripcion", $descripcion);
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
-        return true;
-    }
+
 
     public function  getAllActividades(): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Actividades');
@@ -586,45 +665,5 @@ class DB
         return true;
     }
 
-    public function getLoginEmpleados(String $id_pers, String $pwd): array {
-        $stmt = $this->pdo->prepare('SELECT  *  FROM Empleado where id_pers = :id_pers and pwd = :pwd');
-        $stmt->bindParam(":id_pers", $id_pers);
-        $stmt->bindParam(":pwd", $pwd);
-        $stmt->execute();
 
-        foreach ($stmt as $row) {
-            $itm = new empleados();
-            $itm->setIDPERS($row['id_pers']);
-            $itm->setNOMPERS($row['nom_pers']);
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setPwd($row['pwd']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPuesto($row['puesto']);
-            $this->array['Empleado'] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
-
-    public function getLoginEstudiantes(String $nc, String $password): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc and password = :password');
-        $stmt->bindParam(":nc", $nc);
-        $stmt->bindParam(":password", $password);
-        $stmt->execute();
-
-        foreach ($stmt as $row) {
-                $itm = new estudiantes();
-                $itm->setNc($row['nc']);
-                $itm->setAp($row['ap']);
-                $itm->setAm($row['am']);
-                $itm->setNomalu($row['nomalu']);
-                $itm->setIdCar($row['idcar']);
-                $itm->setSemestre($row['semestre']);
-                $itm->setFirmaDigital($row['firmadigital']);
-                $itm->setPassword($row['password']);
-                $this->array['Estudiante'] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
 }
