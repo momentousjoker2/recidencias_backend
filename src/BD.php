@@ -169,6 +169,102 @@ class DB
         return true;
     }
 
+    public function  updateTipoProyecto(String $idtipoproyecto,String $nombretipo,String $descripcion):bool {
+        try {
+            $stmt = $this->pdo->prepare('UPDATE Tipo_Proyecto SET nombretipo = :nombretipo , descripcion = :descripcion WHERE idtipoproyecto = :idtipoproyecto');
+            $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
+            $stmt->bindParam(":nombretipo", $nombretipo);
+            $stmt->bindParam(":descripcion", $descripcion);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+        return true;
+    }
+
+    public function  getAllPeriodo(): array {
+        $stmt = $this->pdo->prepare('SELECT * FROM Periodo');
+        $stmt->execute();
+        foreach ($stmt as $row) {
+            $itm = new Periodo();
+            $itm->setIdPeriodo($row['idperiodo']);
+            $itm->setNombre($row['nombre']);
+            $itm->setStatus($row['status']);
+            $this->array[] = $itm->getJson();
+        }
+
+        return $this->array;
+    }
+
+    public function  insertPeriodo(String $nombre,String $status):bool {
+        try {
+            $stmt = $this->pdo->prepare('INSERT INTO Periodo(nombre,status) value (:nombre,:status) ');
+            $stmt->bindParam(":nombre", $nombre);
+            $stmt->bindParam(":status", $status);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+        return true;
+    }
+
+    public function  updatePeriodo(String $idperiodo,String $nombre,String $status):bool {
+        try {
+            $stmt = $this->pdo->prepare('UPDATE Tipo_Proyecto SET nombre = :nombre , status = :status WHERE idperiodo = :idperiodo');
+            $stmt->bindParam(":idperiodo", $idperiodo);
+            $stmt->bindParam(":nombre", $nombre);
+            $stmt->bindParam(":status", $status);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function insertActividad (int $iddepartamento,int $idjefepersonal,int $idpersonal,int $idtipoproyecto, String $nombre,String $horarioinicio,String $horariofinal,String $periodo,String $oficioautorizacion,DateTime $fechainicio,DateTime $fechacierre, int $creditos,int $horassemanales,int $noalumnos,String $estatus):bool{
+        try {
+            $stmt = 
+            $this->pdo->prepare
+            ('INSERT INTO Actividades 
+            (iddepartamento,idjefepersonal,idpersonal,idtipoproyecto,nombre,horarioinicio,horariofinal,periodo,oficioautorizacion,fechainicio,fechacierre,creditos,horassemanales,noalumnos,estatus) 
+            value
+            (:iddepartamento,:idjefepersonal,:idpersonal,:idtipoproyecto,:nombre,:horarioInicio,:horariofinal,:periodo,:oficioautorizacion,:fechainicio,:fechacierre,:creditos,:horassemanales,:noalumnos,:estatus) ');
+            $stmt->bindParam(":iddepartamento", $iddepartamento);
+            $stmt->bindParam(":idjefepersonal", $idjefepersonal);
+            $stmt->bindParam(":idpersonal", $idpersonal);
+            $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
+            $stmt->bindParam(":nombre", $nombre);
+            $stmt->bindParam(":horarioInicio", $horarioInicio);
+            $stmt->bindParam(":horariofinal", $horariofinal);
+            $stmt->bindParam(":periodo", $periodo);
+            $stmt->bindParam(":oficioautorizacion", $oficioautorizacion);
+            $stmt->bindParam(":fechainicio", $fechainicio);
+            $stmt->bindParam(":fechacierre", $fechacierre);
+            $stmt->bindParam(":creditos", $creditos);
+            $stmt->bindParam(":horas", $horassemanales);
+            $stmt->bindParam(":noalumnos", $noalumnos);
+            $stmt->bindParam(":estatus", $estatus);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            return false;
+        }
+        return true;
+    }
+
 
 
 
@@ -496,30 +592,7 @@ class DB
         return $this->array;
     }
 
-    public function insertActividad (int $idactividad,int $iddepartamento,int $idjefepersonal,int $idpersonal,int $idtipoproyecto, String $nombre,DateTime $horario,DateTime $periodo,String $oficioautorizacion,DateTime $fechainicio,DateTime $fechacierre, int $creditos,int $noalumnos,String $estatus):bool{
-        try {
-            $stmt = $this->pdo->prepare('INSERT INTO Actividades (idactividad,iddepartamento,idjefepersonal,idpersonal,idtipoproyecto,nombre,horario,periodo,oficioautorizacion,fechainicio,fechacierre,creditos,horas,noalumnos,estatus) value (:idactividad,:iddepartamento,:idjefepersonal,:idpersonal,:idtipoproyecto,:nombre,horario,periodo,oficioautorizacion,fechainicio,fechacierre,creditos,horas,noalumnos,estatus) ');
-            $stmt->bindParam(":idactividad", $idactividad);
-            $stmt->bindParam(":iddepartamento", $iddepartamento);
-            $stmt->bindParam(":idjefepersonal", $idjefepersonal);
-            $stmt->bindParam(":idpersonal", $idpersonal);
-            $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
-            $stmt->bindParam(":nombre", $nombre);
-            $stmt->bindParam(":horario", $horario);
-            $stmt->bindParam(":periodo", $periodo);
-            $stmt->bindParam(":oficioautorizacion", $oficioautorizacion);
-            $stmt->bindParam(":fechainicio", $fechainicio);
-            $stmt->bindParam(":fechacierre", $fechacierre);
-            $stmt->bindParam(":creditos", $creditos);
-            $stmt->bindParam(":horas", $horas);
-            $stmt->bindParam(":noalumnos", $noalumnos);
-            $stmt->bindParam(":estatus", $estatus);
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
-        return true;
-    }
+
 
     public function  getAllSolicitudes(): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Solicitud_Actividad');

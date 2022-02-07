@@ -131,13 +131,116 @@ $app->group('/Catalagos', function (RouteCollectorProxy $group) use ($app) {
             unset($bd);
         }
     });
+
+    $group->post('/tipo_Proyecto_update', function (Request $request, Response $response, array $args){
+        $bd = new DB();
+        
+        $id = $_REQUEST['id'];
+        $tipo_Proyecto = $_REQUEST['tipo_Proyecto'];
+        $description = $_REQUEST['description'];
+
+        try {
+            $request=$bd->updateTipoProyecto($id,$tipo_Proyecto, $description);
+            return echoResponse(200, json_encode($request, JSON_FORCE_OBJECT), $response);
+        } catch (Exception $e) {
+            return echoResponse(200, json_encode($e->getMessage(), JSON_FORCE_OBJECT), $response);
+        } finally {
+            unset($bd);
+        }
+    });
+
+    $group->get('/periodo', function (Request $request, Response $response, array $args) {
+        $bd = new DB();
+        try {
+            return echoResponse(200, json_encode(array("data" => $bd->getAllPeriodo()), JSON_FORCE_OBJECT), $response);
+        } catch (Exception $e) {
+            echo 'Excepción capturada: ',  $e->getMessage(), "\n";
+        } finally {
+            unset($bd);
+            unset($autenticacion);
+        }
+    });
+        
+    $group->post('/periodo', function (Request $request, Response $response, array $args) {
+        $bd = new DB();
+        
+        $Nombre = $_REQUEST['Nombre'];
+        $Status = $_REQUEST['Status'];
+        try {
+            $request=$bd->insertPeriodo($Nombre, $Status);
+            return echoResponse(200, json_encode($request, JSON_FORCE_OBJECT), $response);
+        } catch (Exception $e) {
+            return echoResponse(200, json_encode($e->getMessage(), JSON_FORCE_OBJECT), $response);
+        } finally {
+            unset($bd);
+        }
+    });
+
+    $group->post('/periodo_update', function (Request $request, Response $response, array $args){
+        $bd = new DB();
+        
+        $id = $_REQUEST['id'];
+        $Nombre = $_REQUEST['Nombre'];
+        $Status = $_REQUEST['Status'];
+
+        try {
+            $request=$bd->updatePeriodo($id,$Nombre, $Status);
+            return echoResponse(200, json_encode($request, JSON_FORCE_OBJECT), $response);
+        } catch (Exception $e) {
+            return echoResponse(200, json_encode($e->getMessage(), JSON_FORCE_OBJECT), $response);
+        } finally {
+            unset($bd);
+        }
+    });
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 $app->group('/Actividades', function (RouteCollectorProxy $group) use ($app) {
     $group->post('/insert', function (Request $request, Response $response, array $args) {
+        $bd = new DB();
+        
+        $IdDepartamento = $_REQUEST['IdDepartamento'];
+        $idJefeDepartamento = $_REQUEST['idJefeDepartamento'];
+        $IdPersonalResponsable = $_REQUEST['IdPersonalResponsable'];
+        $IdTipoProyecto = $_REQUEST['IdTipoProyecto'];
+        $Nombre_Proyecto = $_REQUEST['Nombre_Proyecto'];
+        $HorarioInicio = $_REQUEST['HorarioInicio'];
+        $HorarioFin = $_REQUEST['HorarioFin'];
+        $Periodo = $_REQUEST['Periodo'];
+        $FechaInicio = $_REQUEST['FechaInicio'];
+        $FechaCierre = $_REQUEST['FechaCierre'];
+        $Creditos = $_REQUEST['Creditos'];
+        $HorasSemanales = $_REQUEST['HorasSemanales'];
+        $noAlumnos = $_REQUEST['noAlumnos'];
+        $Estatus = $_REQUEST['Estatus'];
+        $OficioAutorizacion="";
+
+        try {
+            $request=$bd->insertActividad($IdDepartamento,$idJefeDepartamento,$IdPersonalResponsable,$IdTipoProyecto,$Nombre_Proyecto,$HorarioInicio,$HorarioFin,$Periodo,$OficioAutorizacion,$FechaInicio,$FechaCierre,$Creditos,$HorasSemanales,$noAlumnos,$Estatus);
+            return echoResponse(200, json_encode($request, JSON_FORCE_OBJECT), $response);
+        } catch (Exception $e) {
+            return echoResponse(200, json_encode($e->getMessage(), JSON_FORCE_OBJECT), $response);
+        } finally {
+            unset($bd);
+        }
+
     });
 
-    $group->get('/get', function (Request $request, Response $response, array $args) {
+    $group->get('/All', function (Request $request, Response $response, array $args) {
         $bd = new DB();
         try {
             return echoResponse(200, json_encode(array("data" => $bd->getAllActividades()), JSON_FORCE_OBJECT), $response);
@@ -148,6 +251,24 @@ $app->group('/Actividades', function (RouteCollectorProxy $group) use ($app) {
         }
     });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 $app->group('/Solicitud', function (RouteCollectorProxy $group) use ($app) {
     $group->post('/insert', function (Request $request, Response $response, array $args) {
