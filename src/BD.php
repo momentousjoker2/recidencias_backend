@@ -210,7 +210,7 @@ class DB
 
     public function  updatePeriodo(String $idperiodo,String $nombre,String $status):bool {
         try {
-            $stmt = $this->pdo->prepare('UPDATE Tipo_Proyecto SET nombre = :nombre , status = :status WHERE idperiodo = :idperiodo');
+            $stmt = $this->pdo->prepare('UPDATE Periodo SET nombre = :nombre , status = :status WHERE idperiodo = :idperiodo');
             $stmt->bindParam(":idperiodo", $idperiodo);
             $stmt->bindParam(":nombre", $nombre);
             $stmt->bindParam(":status", $status);
