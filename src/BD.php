@@ -1,224 +1,356 @@
 <?php
 require __DIR__ . '/config/BD_Connect.php';
 
-//requiere models
-require_once  __DIR__ . '/modal/include.php';
+ini_set('display_errors', 0);
 
 class DB
 {
     private $db;
     private $pdo;
-    private $pdoITCG;
-    private $array;
-    private $arrayITCG;
 
     function __construct() {
         $this->db = new DB_Connect();
         $this->pdo = $this->db->createConnexicon();
-        $this->pdoITCG = $this->db->createConnexiconITCG();
-        $this->array = array();
     }
-    //Inicia funcion de login
-    function isTypeUser(String $username):String{
-        $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc ');
-        $stmt->bindParam(":nc", $username);
-        $stmt->execute();
-        $contar=$stmt->rowCount();
-        if($contar==1){
-            return "Estudiante";
-        }else{
-            $stmt = $this->pdo->prepare('SELECT  *  FROM Empleado where id_pers = :id_pers ');
-            $stmt->bindParam(":id_pers", $username);
+
+    //Login Terminado 
+    function login(String $username, String $password):array{
+        try{
+            $data = array();
+            $user['error']=false;
+
+            $stmt = $this->pdo->prepare("SELECT e.nc as 'username' , CONCAT(e.nomalu,' ',e.ap,' ',e.am) as 'nombre','Estudiante' as rol from Estudiantes as e WHERE e.nc = :username && e.password = :password ;");
+            $stmt->bindParam(":username", $username);
+            $stmt->bindParam(":password", $password);
             $stmt->execute();
             $contar=$stmt->rowCount();
-            $types = $stmt->fetch();
-
             if($contar==1){
-                return $types['puesto'];
+                $user = $stmt->fetch();
+                $user['error']=false;
+
             }else{
-                return "No existe";
+                $stmt = $this->pdo->prepare("SELECT e.ID_PERS as 'username' ,e.NOM_PERS as 'nombre', e.Puesto  as 'rol' from Empleado as e where e.ID_PERS = :username  && e.pwd = :password");
+                $stmt->bindParam(":username", $username);
+                $stmt->bindParam(":password", $password);
+                $stmt->execute();
+                $contar=$stmt->rowCount();
+                if($contar==1){
+                    $user = $stmt->fetch();
+                    $user['error']=false;
+                }else{
+                    $user['error']=true;
+                }
             }
+        
+            $data['username']=$user['username'];
+            $data['nombre']=$user['nombre'];
+            $data['rol']=$user['rol'];
+            $data['error']=$user['error'];
+        }catch(Exception $e){
+                    $data['error']=true;
+        }finally{
+            return $data;
         }
     }
-        public function getLoginEmpleados(String $id_pers, String $pwd): array {
-        $stmt = $this->pdo->prepare('SELECT  *  FROM Empleado where id_pers = :id_pers and pwd = :pwd');
-        $stmt->bindParam(":id_pers", $id_pers);
-        $stmt->bindParam(":pwd", $pwd);
-        $stmt->execute();
 
-        foreach ($stmt as $row) {
-            $itm = new empleados();
-            $itm->setIDPERS($row['id_pers']);
-            $itm->setNOMPERS($row['nom_pers']);
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setPwd($row['pwd']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPuesto($row['puesto']);
-            $this->array['Empleado'] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
-
-    public function getLoginEstudiantes(String $nc, String $password): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc and password = :password');
-        $stmt->bindParam(":nc", $nc);
-        $stmt->bindParam(":password", $password);
-        $stmt->execute();
-
-        foreach ($stmt as $row) {
-                $itm = new estudiantes();
-                $itm->setNc($row['nc']);
-                $itm->setAp($row['ap']);
-                $itm->setAm($row['am']);
-                $itm->setNomalu($row['nomalu']);
-                $itm->setIdCar($row['idcar']);
-                $itm->setSemestre($row['semestre']);
-                $itm->setFirmaDigital($row['firmadigital']);
-                $itm->setPassword($row['password']);
-                $this->array['Estudiante'] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
-    //TERMINA LOGIN
-    
-    //Catalagos inicio
-    public function getAllCarreras(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Carreras');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new Carreras();
-            $itm->setIdCar($row['idcar']);
-            $itm->setNombreCar($row['nombrecar']);
-            $itm->setSiglas($row['siglas']);
-            $this->array[] = $itm->getJson();
-        }
-        return $this->array;
-    }
-    
-    public function getAllDepartamentos(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Deptos');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new departamentos();
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setNOMDEPTO($row['nom_depto']);
-            $this->array[] = $itm->getJson();
-        }
-        return $this->array;
-    }
-    
-    public function getAllEmpleados(): array {
-        $stmt = $this->pdo->prepare('SELECT e.id_pers, e.nom_pers, d.NOM_DEPTO as id_depto, e.pwd, e.firmadigital, e.puesto FROM Empleado as e INNER JOIN Deptos as d on d.ID_DEPTO = e.ID_DEPTO');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new empleados();
-            $itm->setIDPERS($row['id_pers']);
-            $itm->setNOMPERS($row['nom_pers']);
-            $itm->setIDDEPTO($row['id_depto']);
-            $itm->setPwd($row['pwd']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPuesto($row['puesto']);
-            $this->array[] = $itm->getJson();
-        }
-        return $this->array;
-    }
-    public function  getAllEstudiantes(): array {
-        $stmt = $this->pdo->prepare('SELECT e.nc,e.ap,e.am,e.nomalu,c.NombreCar as idcar,e.semestre,e.firmadigital,e.password FROM Estudiantes as e inner JOIN Carreras as c on e.IdCar=c.IdCar');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new estudiantes();
-            $itm->setNc($row['nc']);
-            $itm->setAp($row['ap']);
-            $itm->setAm($row['am']);
-            $itm->setNomalu($row['nomalu']);
-            $itm->setIdCar($row['idcar']);
-            $itm->setSemestre($row['semestre']);
-            $itm->setFirmaDigital($row['firmadigital']);
-            $itm->setPassword($row['password']);
-            $this->array[] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
-
-    public function  getAllTipoProyecto(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Tipo_Proyecto');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new Tipo_Proyecto();
-            $itm->setIdTipoProyecto($row['idtipoproyecto']);
-            $itm->setNombreTipo($row['nombretipo']);
-            $itm->setDescripcion($row['descripcion']);
-            $this->array[] = $itm->getJson();
-        }
-
-        return $this->array;
-    }
-
-    public function  insertTipoProyecto(String $nombretipo,String $descripcion):bool {
-        try {
-            $stmt = $this->pdo->prepare('INSERT INTO Tipo_Proyecto(nombretipo,descripcion) value (:nombretipo,:descripcion) ');
-            $stmt->bindParam(":nombretipo", $nombretipo);
-            $stmt->bindParam(":descripcion", $descripcion);
+    //Carreras Terminadas 
+    public function getCatalagoCarreras(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT * FROM carreras');
             $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+                $datos->idcar=$row['idcar'];
+                $datos->nombrecar=$row['nombcar'];
+                $datos->siglas=$row['siglas'];
+
+                $data[] = $datos;
+            } 
+        }catch(Exception $e){
+                    $data['error']=true;
+        }finally{
+            return $data;
         }
-        return true;
     }
 
-    public function  updateTipoProyecto(String $idtipoproyecto,String $nombretipo,String $descripcion):bool {
+    //Departamentos Terminados 
+    public function getCatalagoDepartemento(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT * FROM Deptos');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+                $datos->id_depto=$row['id_depto'];
+                $datos->nom_depto=$row['nom_depto'];
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }    
+    }
+
+    //Empleados Terminado 
+    public function getCatalagoEmpleados(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT em.ID_PERS as "ID", em.NOM_PERS as "Nombre",(SELECT d.NOM_DEPTO FROM Deptos as d WHERE d.ID_DEPTO=em.ID_DEPTO) as Departamento,em.Puesto as "puesto" from Empleado as em');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+
+                $datos->id_pers = $row['id'];
+                $datos->nom_pers = $row['nombre'];
+                $datos->id_depto = $row['departamento'];
+                $datos->puesto = $row['puesto'];
+
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }    
+    }
+
+    //Update Password empleados Termiandos 
+    public function updatePasswordEmpleados($ID,$password): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('UPDATE Empleado SET pwd=:pwd WHERE ID_PERS =:ID_PERS ');
+            $stmt->bindParam(":pwd", $password);
+            $stmt->bindParam(":ID_PERS", $ID);
+            $stmt->execute();
+            $data["error"]=!$stmt->execute();
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }    
+    }
+
+    //Estudiantes Termiandos 
+    public function  getCatalagoEstudiantes(): array {
+        try{
+            $data = array();
+
+            $stmt = $this->pdo->prepare('SELECT es.nc as "ID",CONCAT(es.nomalu," ",es.ap," ",es.am) as "Nombre" , (SELECT c.nombcar FROM carreras as c where c.idcar = es.idcar) as "Carrera", (SELECT COUNT(*) FROM RegistroActividades as r WHERE r.IdEstudiante=es.nc ) as "Actividades" FROM Estudiantes as es; ');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+                $datos->ID = $row['id'];
+                $datos->Nombre = $row['nombre'];
+                $datos->Carrera = $row['carrera'];
+                $datos->Actividades = $row['actividades'];
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }    
+    }
+
+    //Update Password Estudiantes Termiandos 
+    public function updatePasswordEstudiantes($ID,$password): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('UPDATE Estudiantes SET password=:password WHERE nc =:nc ');
+            $stmt->bindParam(":password", $password);
+            $stmt->bindParam(":nc", $ID);
+            $stmt->execute();
+            $data["error"]=!$stmt->execute();
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }     
+    }
+
+    //Categorias Terminadas probar
+    public function  getCatalagoCategoria(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT * FROM Categoria');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idcategoria = $row['idcategoria'];
+                $datos->nombre = $row['nombre'];
+                $datos->descripcion = $row['descripcion'];
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }     
+    }
+
+    //Insert a categorias terminado
+    public function  insertCategorias(String $nombre,String $descripcion):array {
         try {
-            $stmt = $this->pdo->prepare('UPDATE Tipo_Proyecto SET nombretipo = :nombretipo , descripcion = :descripcion WHERE idtipoproyecto = :idtipoproyecto');
+
+            $stmt = $this->pdo->prepare('INSERT INTO Categoria(nombre,descripcion) value (:nombre,:descripcion) ');
+            $stmt->bindParam(":nombre", $nombre);
+            $stmt->bindParam(":descripcion", $descripcion);
+            $data["error"]=!$stmt->execute();
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+    //update a categorias terminado
+    public function  updateCategoria(String $idCategoria,String $nombre,String $descripcion):array {
+        try {
+            $stmt = $this->pdo->prepare('UPDATE Categoria SET nombre = :nombre , descripcion = :descripcion WHERE idCategoria = :idCategoria');
+            $stmt->bindParam(":idCategoria", $idCategoria);
+            $stmt->bindParam(":nombre", $nombre);
+            $stmt->bindParam(":descripcion", $descripcion);
+            $data["error"]=!$stmt->execute();
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+    
+    //Tipo de proyecto probar
+    public function  getCatalagoTipoProyecto(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT t.IdTipoProyecto as "id", t.NombreTipo as "nombre",(SELECT c.nombre FROM Categoria as c WHERE c.idCategoria = t.idCategoria) as "Categoria", t.Descripcion as "descripcion" FROM Tipo_Proyecto as t');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->id = $row['id'];
+                $datos->nombre = $row['nombre'];
+                $datos->descripcion = $row['descripcion'];
+                $datos->Categoria = $row['categoria'];
+                $data[] = $datos;
+            }
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+
+    // insertar Tipo de proyecto probar
+    public function  insertTipoProyecto(String $idCategoria,String $NombreTipo,String $description):array {
+        try {
+
+            $stmt = $this->pdo->prepare('INSERT INTO Tipo_Proyecto(idCategoria,NombreTipo,Descripcion) value (:idCategoria,:NombreTipo,:description) ');
+            $stmt->bindParam(":idCategoria", $idCategoria);
+            $stmt->bindParam(":NombreTipo", $NombreTipo);
+            $stmt->bindParam(":description", $description);
+            $data["error"]=!$stmt->execute();
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+
+    //update a tipo de proyecto terminado
+    public function  updateTipoProyecto(String $idtipoproyecto,String $idCategoria,String $nombretipo,String $descripcion):array {
+        try {
+            $stmt = $this->pdo->prepare('UPDATE Tipo_Proyecto SET idCategoria = :idCategoria , nombretipo = :nombretipo , descripcion = :descripcion WHERE idtipoproyecto = :idtipoproyecto');
             $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
+            $stmt->bindParam(":idCategoria", $idCategoria);
             $stmt->bindParam(":nombretipo", $nombretipo);
             $stmt->bindParam(":descripcion", $descripcion);
-            $stmt->execute();
+            $data["error"]=!$stmt->execute();
+            
         } catch (PDOException $e) {
-            return false;
+            $data["error"]=true;
+        }finally{
+            return $data;
         }
-        return true;
     }
 
-    public function  getAllPeriodo(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM Periodo');
-        $stmt->execute();
-        foreach ($stmt as $row) {
-            $itm = new Periodo();
-            $itm->setIdPeriodo($row['idperiodo']);
-            $itm->setNombre($row['nombre']);
-            $itm->setStatus($row['status']);
-            $this->array[] = $itm->getJson();
-        }
+    //categoria probar
+    public function  getCatalagoPeriodo(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT * FROM Periodo');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idperiodo = $row['idperiodo'];
+                $datos->nombre = $row['nombre'];
+                $datos->status=$row['status'];
+                $data[] = $datos;
+            }
 
-        return $this->array;
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
     }
 
-    public function  insertPeriodo(String $nombre,String $status):bool {
+    // insertar periodo probar
+    public function  insertPeriodo(String $nombre,String $status):array {
         try {
             $stmt = $this->pdo->prepare('INSERT INTO Periodo(nombre,status) value (:nombre,:status) ');
             $stmt->bindParam(":nombre", $nombre);
             $stmt->bindParam(":status", $status);
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
+            $data["error"]=!$stmt->execute();
+        }  catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
         }
-        return true;
     }
-
-    public function  updatePeriodo(String $idperiodo,String $nombre,String $status):bool {
+    
+    //update a periodo terminado
+    public function  updatePeriodo(String $idperiodo,String $nombre,String $status):array {
         try {
             $stmt = $this->pdo->prepare('UPDATE Periodo SET nombre = :nombre , status = :status WHERE idperiodo = :idperiodo');
             $stmt->bindParam(":idperiodo", $idperiodo);
             $stmt->bindParam(":nombre", $nombre);
             $stmt->bindParam(":status", $status);
-            $stmt->execute();
+            $data["error"]=!$stmt->execute();
         } catch (PDOException $e) {
-            return false;
+            $data["error"]=true;
+        }finally{
+            return $data;
         }
-        return true;
+    }
+
+
+    //categoria probar
+    public function  getCatalagoProyectos(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT cp.idactividad, (SELECT c.nombre FROM Categoria as c WHERE c.idCategoria = cp.idCategoria) as Categoria, (SELECT t.NombreTipo FROM Tipo_Proyecto as t WHERE t.IdTipoProyecto = cp.idtipoproyecto) as "Tipo_Proyecto", cp.nombres_proyecto, cp.credito, cp.oficioautorizacion, cp.horassemanales, cp.status FROM Catalago_Proyectos  as cp');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idactividad = $row['idactividad'];
+                $datos->Categoria = $row['categoria'];
+                $datos->Tipo_Proyecto = $row['tipo_proyecto'];
+                $datos->nombres_proyecto = $row['nombres_proyecto'];
+                $datos->oficioautorizacion = $row['oficioautorizacion'];
+                $datos->credito = $row['credito'];
+                $datos->horassemanales = $row['horassemanales'];
+                $datos->status = $row['status'];
+                $data[] = $datos;
+            }
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
     }
 
 
@@ -235,7 +367,9 @@ class DB
 
 
 
-    public function insertActividad (int $iddepartamento,int $idjefepersonal,int $idpersonal,int $idtipoproyecto, String $nombre,String $horarioinicio,String $horariofinal,String $periodo,String $oficioautorizacion,DateTime $fechainicio,DateTime $fechacierre, int $creditos,int $horassemanales,int $noalumnos,String $estatus):bool{
+
+
+    /*  public function insertActividad (int $iddepartamento,int $idjefepersonal,int $idpersonal,int $idtipoproyecto, String $nombre,String $horarioinicio,String $horariofinal,String $periodo,String $oficioautorizacion,DateTime $fechainicio,DateTime $fechacierre, int $creditos,int $horassemanales,int $noalumnos,String $estatus):bool{
         try {
             $stmt = 
             $this->pdo->prepare
@@ -325,20 +459,19 @@ class DB
                 }
             }
 
-  /*           foreach ($this->arrayITCG as $row) {
+            foreach ($this->arrayITCG as $row) {
                 $stmt = $this->pdo->prepare('INSERT INTO Carreras(idcar,nombrecar,siglas) values (:idcar,:nombrecar,:siglas)');
                 $stmt->bindParam(":idcar", $row . getIdCar());
                 $stmt->bindParam(":nombrecar", $row . getNombreCar());
                 $stmt->bindParam(":siglas", $row .getSiglas());
                 $stmt->execute();
-            } */
+            } 
         } catch (PDOException $e) {
             return false;
         }
         return true;
     }
 
-   
 
     public function insertDepartamentos():bool {
         try {
@@ -365,12 +498,12 @@ class DB
                 }
             }
 
-       /*      foreach ($this->arrayITCG as $row) {
+        foreach ($this->arrayITCG as $row) {
                 $stmt = $this->pdo->prepare('INSERT INTO Carreras(id_depto,nom_depto) values (:id_depto,:nom_depto)');
                 $stmt->bindParam(":id_depto", $row.getIDDEPTO());
                 $stmt->bindParam(":nom_depto", $row.getNOMDEPTO());
                 $stmt->execute();
-            } */
+            } 
         } catch (PDOException $e) {
             return false;
         }
@@ -427,7 +560,7 @@ class DB
                     $this->arrayITCG[] = $itm;
                 }
             }
-    /*
+    
             foreach ($this->arrayITCG as $row) {
                 $stmt = $this->pdo->prepare('INSERT INTO Empleado(id_pers,nom_pers,id_depto,pwd,firmadigital,puesto) values (:id_pers,:nom_pers,:id_depto,:pwd,:firmadigital,:puesto)');
                 $stmt->bindParam(":id_pers", $row.getIDPERS());
@@ -438,14 +571,13 @@ class DB
                 $stmt->bindParam(":puesto", $row.getPuesto());
                 $stmt->execute();
             }
-            */
         } catch (PDOException $e) {
             return false;
         }
         return true;
     }
 
- 
+
 
     public function  getEstudiante(int $nc): array {
         $stmt = $this->pdo->prepare('SELECT * FROM Estudiantes where nc = :nc');
@@ -504,7 +636,7 @@ class DB
                 }
             }
 
-            /* foreach ($this->arrayITCG as $row) {
+            foreach ($this->arrayITCG as $row) {
                 $stmt = $this->pdo->prepare('INSERT INTO Empleado(nc,ap,am,nomalu,idcar,semestre,firmadigital,password) values (:nc,:ap,:am,:nomalu,:idcar,:semestre,:firmadigital,:password)');
                 $stmt->bindParam(":nc", $row.getNc());
                 $stmt->bindParam(":ap", $row.getAp());            
@@ -515,7 +647,7 @@ class DB
                 $stmt->bindParam(":firmadigital", $row.getFirmaDigital());
                 $stmt->bindParam(":password", $row.getPassword());
                 $stmt->execute();
-            } */
+            } 
         } catch (PDOException $e) {
             return false;
         }
@@ -736,7 +868,7 @@ class DB
             return false;
         }
         return true;
-    }
+    } */
 
 
 }
