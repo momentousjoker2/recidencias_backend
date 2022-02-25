@@ -35,7 +35,6 @@
             try {
             $data = array();
             $bd = new DB();
-            if (verifyRequiredParams($_REQUEST, 2)) {
                 $usuario = $_REQUEST['usuario'];
                 $password = $_REQUEST['password'];
                 $data=$bd->login($usuario, $password);
@@ -45,11 +44,7 @@
                     $data["message"] = "Usuarios no encontrado";
                     $data["code"] = "2001";
                 }
-            }else {
-                $data["error"] = true;
-                $data["message"] = "Datos no aceptados";
-                $data["code"] = "2000";
-            }
+
 
         } catch (Exception $e) {
                 $data=array();
@@ -122,7 +117,6 @@
                 $bd = new DB();
                 $data = array();
 
-                if (verifyRequiredParams($_REQUEST, 2)) {
                     $iduser = $_REQUEST['iduser'];
                     $newPassword = $_REQUEST['newpassword'];
 
@@ -136,11 +130,6 @@
                         $data = array();
                         $data["error"] = false;
                     }
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
             } catch (Exception $e) {
                 $data=array();
                 $data["error"] = true;
@@ -173,7 +162,6 @@
             try {
                 $bd = new DB();
                 $data = array();
-                if (verifyRequiredParams($_REQUEST, 2)) {
                     $iduser = $_REQUEST['iduser'];
                     $newPassword = $_REQUEST['newpassword'];
                     $data=$bd->updatePasswordEstudiantes($iduser, $newPassword);
@@ -186,11 +174,7 @@
                         $data = array();
                         $data["error"] = false;
                     }
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
+
             } catch (Exception $e) {
                 $data=array();
                 $data["error"] = true;
@@ -224,9 +208,8 @@
             try {
                 $bd = new DB();
                 $data = array();
-                if (verifyRequiredParams($_REQUEST, 2)) {
                     $nombre = $_REQUEST['nombre'];
-                    $description = $_REQUEST['description'];
+                    $description = $_REQUEST['descripcion'];
                     $data=$bd->insertCategorias($nombre, $description);
                     if($data['error']){
                         $data = array();
@@ -237,11 +220,7 @@
                         $data = array();
                         $data["error"] = false;
                 }
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
+
             } catch (Exception $e) {
                 $data=array();
                 $data["error"] = true;
@@ -256,13 +235,12 @@
         //Actualizar Categorias Terminado
         $group->post('/categoria_update', function (Request $request, Response $response){
             try {
-                if (verifyRequiredParams($_REQUEST, 3)) {
                     $bd = new DB();
                     $id = $_REQUEST['id'];
                     $nombre = $_REQUEST['nombre'];
                     $description = $_REQUEST['description'];
                     $data=$bd->updateCategoria($id,$nombre, $description);
-            }
+            
             }catch (Exception $e) {
                 $data=array();
                 $data["error"] = true;
@@ -274,100 +252,6 @@
 
             }
         
-        });
-
-        //Categoria
-        //Obtener todos las tipoProyecto Terminado
-        $group->get('/tipoProyecto', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCatalagoTipoProyecto();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Insertar tipoProyecto Terminado
-        $group->post('/tipoProyecto', function (Request $request, Response $response) {
-
-            try {
-                $bd = new DB();
-                $data = array();
-                if (verifyRequiredParams($_REQUEST, 3)) {
-                    $idCategoria = $_REQUEST['idCategoria'];
-                    $nombre = $_REQUEST['nombre'];
-                    $description = $_REQUEST['description'];
-                    $data=$bd->insertTipoProyecto($idCategoria,$nombre, $description);
-                    if($data['error']){
-                        $data = array();
-                        $data["error"] = true;
-                        $data["message"] = "No update";
-                        $data["code"] = "2004";
-                    }else{
-                        $data = array();
-                        $data["error"] = false;
-                }
-
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
-
-
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-
-            }
-        });
-
-        //Actualizar tipoProyecto Terminado
-        $group->post('/tipoProyecto_update', function (Request $request, Response $response){
-            try {
-                $bd = new DB();
-                $data = array();
-                if (verifyRequiredParams($_REQUEST, 4)) {
-                    $idtipoproyecto = $_REQUEST['idtipoproyecto'];
-                    $idCategoria = $_REQUEST['idCategoria'];
-                    $nombretipo = $_REQUEST['nombre'];
-                    $descripcion = $_REQUEST['descripcion'];
-                    $data=$bd->updateTipoProyecto($idtipoproyecto,$idCategoria,$nombretipo, $descripcion);
-                    if($data['error']){
-                        $data = array();
-                        $data["error"] = true;
-                        $data["message"] = "No update";
-                        $data["code"] = "2004";
-                    }else{
-                        $data = array();
-                        $data["error"] = false;
-                }
-
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
         });
 
         //Obtener periodo Terminado
@@ -456,7 +340,7 @@
         });
 
     });
-
+/* 
     $app->group('/Movimientos', function (RouteCollectorProxy $group) use ($app) {
 
         $group->get('/Catalagos_Proyecto', function (Request $request, Response $response) {
@@ -478,7 +362,7 @@
 
 
 
-    });
+    }); */
 
 
 
