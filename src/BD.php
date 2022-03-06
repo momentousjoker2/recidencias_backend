@@ -93,6 +93,40 @@ class DB
         }    
     }
 
+    public function getCategoriaDetalleDepCar():array{
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare("Select dd.idCarrera as 'idcarrera',(SELECT c.nombcar FROM carreras as c WHERE c.idcar = dd.idCarrera) as 'NomCarrera',dd.idDepartamento as 'idDepartamento',(SELECT d.nom_depto FROM departamentos as d WHERE d.id_depto = dd.idDepartamento ) as 'NomDepartamento' FROM detDepCar as dd; ");
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+                $datos->departamentos=["iddepartamento"=>$row['iddepartamento'],"nomdepartamento"=>$row['nomdepartamento']];
+                $datos->carreras=["idcarrera"=>$row['idcarrera'],"nomcarrera"=>$row['nomcarrera']];
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+            $data['error']=true;
+        }finally{
+            return $data;
+        }  
+    }
+
+        //Insert a categorias terminado
+    public function  insertCategoriaDetalleDepCar(String $iddepartamento,String $idcarrera):array {
+        try {
+
+            $stmt = $this->pdo->prepare('INSERT INTO detDepCar(iddepartamento,idcarrera) value (:iddepartamento,:idcarrera) ');
+            $stmt->bindParam(":iddepartamento", $iddepartamento);
+            $stmt->bindParam(":idcarrera", $idcarrera);
+            $data["error"]=!$stmt->execute();
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+
     //Empleados Terminado 
     public function getCatalagoEmpleados(): array {
         try{
@@ -272,55 +306,107 @@ class DB
         }
     }
 
- /*    //categoria probar
+    //categoria probar
     public function  getCatalagoProyectos(): array {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('SELECT cp.idactividad, (SELECT c.nombre FROM Categoria as c WHERE c.idCategoria = cp.idCategoria) as Categoria, (SELECT t.NombreTipo FROM Tipo_Proyecto as t WHERE t.IdTipoProyecto = cp.idtipoproyecto) as "Tipo_Proyecto", cp.nombres_proyecto, cp.credito, cp.oficioautorizacion, cp.horassemanales, cp.status FROM Catalago_Proyectos  as cp');
+            $stmt = $this->pdo->prepare('SELECT p.idactividad as "id", (SELECT c.idcategoria FROM categoria as c WHERE c.idcategoria = p.idCategoria) as "idcategoria", (SELECT c.nombre FROM categoria as c WHERE c.idcategoria = p.idCategoria) as "categoria",p.nombres_proyecto as "nombre", p.oficioautorizacion as "oficio", p.credito as "credito",p.horassemanales as "horassemanales",p.estado FROM proyectos as p');
             $stmt->execute();
             foreach ($stmt as $row) {
                 $datos = new stdClass();
-                $datos->idactividad = $row['idactividad'];
-                $datos->Categoria = $row['categoria'];
-                $datos->Tipo_Proyecto = $row['tipo_proyecto'];
-                $datos->nombres_proyecto = $row['nombres_proyecto'];
-                $datos->oficioautorizacion = $row['oficioautorizacion'];
+                $datos->idactividad = $row['id'];
+                $datos->categoria = ["id"=>$row['idcategoria'],"nombre"=>$row['categoria']];
+                $datos->nombres_proyecto = $row['nombre'];
+                $datos->oficioautorizacion = $row['oficio'];
                 $datos->credito = $row['credito'];
                 $datos->horassemanales = $row['horassemanales'];
-                $datos->status = $row['status'];
+                $datos->estado = $row['estado'];
                 $data[] = $datos;
             }
 
         } catch (PDOException $e) {
             $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
         }finally{
             return $data;
         }
     }
 
     //categoria probar
-    public function  insertCatalagoProyectos($idCategoria, $idtipoproyecto, $nombres_proyecto, $oficioautorizacion, $credito, $horassemanales, $status): array {
+    public function  insertCatalagoProyectos(String $idCategoria, String $nombres_proyecto,String $filename,String $contentype, $oficioautorizacion, String $credito, String $horassemanales, String $status) {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('INSERT INTO Catalago_Proyectos ( idCategoria, idtipoproyecto, nombres_proyecto, oficioautorizacion, credito, horassemanales, status) VALUES (:idCategoria, :idtipoproyecto, :nombres_proyecto, :oficioautorizacion, :credito, :horassemanales, :status)');
-            $stmt->bindParam(":idCategoria", $idCategoria);
-            $stmt->bindParam(":idtipoproyecto", $idtipoproyecto);
+            $stmt = $this->pdo->prepare('INSERT INTO proyectos ( idcategoria, nombres_proyecto,filename,contentype, oficioautorizacion, credito, horassemanales,  estado ) VALUES (:idcategoria, :nombres_proyecto,:filename,:contentype, :oficioautorizacion, :credito, :horassemanales, :estatus )');
+            $stmt->bindParam(":idcategoria", $idCategoria);
             $stmt->bindParam(":nombres_proyecto", $nombres_proyecto);
+            $stmt->bindParam(":filename", $filename);
+            $stmt->bindParam(":contentype", $contentype);
             $stmt->bindParam(":oficioautorizacion", $oficioautorizacion);
             $stmt->bindParam(":credito", $credito);
             $stmt->bindParam(":horassemanales", $horassemanales);
-            $stmt->bindParam(":status", $status);
-
+            $stmt->bindParam(":estatus", $status);
+            $data['error']=!$stmt->execute();
         } catch (PDOException $e) {
             $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
         }finally{
             return $data;
         }
-    } */
+    } 
 
 
+    public function getAltaProyectos():array{
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare("SELECT a.idactivida, (SELECT d.id_depto from departamentos as d WHERE d.id_depto = a.iddepartamento) as 'id_departamento' , (SELECT d.nom_depto from departamentos as d WHERE d.id_depto = a.iddepartamento) as 'nombre_departamento', (SELECT e.id_pers from empleado as e WHERE e.id_pers = a.idjefedepartemnto) as 'id_jefedepartamento', (SELECT e.nom_pers from empleado as e WHERE e.id_pers = a.idjefedepartemnto) as 'nombre_jefedepartamento', (SELECT e.id_pers from empleado as e WHERE e.id_pers = a.idpersonalresponsable) as 'id_responsable', (SELECT e.nom_pers from empleado as e WHERE e.id_pers = a.idpersonalresponsable) as 'nombre_responsable', a.horainicio, a.horafin, (SELECT p.idperiodo FROM periodo as p WHERE p.idperiodo = a.idperiodo) as 'id_periodo', (SELECT p.nombre FROM periodo as p WHERE p.idperiodo = a.idperiodo) as 'nombre_periodo', a.fechainicio, a.fechacierre, a.numeroalumnos, a.estado FROM actividades as a");
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idactivida = $row['idactivida'];
+                $datos->departemento = ["id_departamento"=>$row['id_departamento'],"nombre_departamento"=>$row['nombre_departamento']];
+                $datos->jefedepartamento = ["id_jefedepartamento"=>$row['id_jefedepartamento'],"nombre_jefedepartamento"=>$row['nombre_jefedepartamento']];
+                $datos->responsable = ["id_responsable"=>$row['id_responsable'],"nombre_responsable"=>$row['nombre_responsable']];
+                $datos->horainicio = $row['horainicio'];
+                $datos->horafin = $row['horafin'];
+                $datos->periodo = ["id_periodo"=>$row['id_periodo'],"nombre_periodo"=>$row['nombre_periodo']];
+                $datos->fechainicio = $row['fechainicio'];
+                $datos->fechacierre = $row['fechacierre'];
+                $datos->numeroalumnos = $row['numeroalumnos'];
+                $datos->estado = $row['estado'];
+                $data[] = $datos;
+            }
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
+        }finally{
+            return $data;
+        }
+    }
+    
+    public function insertAltaProyecto(String $iddepartamento, String $idjefedepartemnto, String $idpersonalresponsable, String $horainicio, String $horafin, String $idperiodo, String $fechainicio, String $fechacierre, String $numeroalumnos, String $estado):array{
+        try{
+            $stmt = $this->pdo->prepare("INSERT INTO actividades(iddepartamento, idjefedepartemnto, idpersonalresponsable, horainicio, horafin, idperiodo, fechainicio, fechacierre, numeroalumnos, estado) VALUES (:iddepartamento, :idjefedepartemnto, :idpersonalresponsable, :horainicio, :horafin, :idperiodo, :fechainicio, :fechacierre, :numeroalumnos, :estado)");
+            $stmt->bindParam(":iddepartamento", $iddepartamento);
+            $stmt->bindParam(":idjefedepartemnto", $idjefedepartemnto);
+            $stmt->bindParam(":idpersonalresponsable", $idpersonalresponsable);
+            $stmt->bindParam(":horainicio", $horainicio);
+            $stmt->bindParam(":horafin", $horafin);
+            $stmt->bindParam(":idperiodo", $idperiodo);
+            $stmt->bindParam(":fechainicio", $fechainicio);
+            $stmt->bindParam(":fechacierre", $fechacierre);
+            $stmt->bindParam(":numeroalumnos", $numeroalumnos);
+            $stmt->bindParam(":estado", $estado);
 
 
+        }catch (PDOException $e) {
+            $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
+        }finally{
+            return $data;
+        }
+
+    }
 
 
 

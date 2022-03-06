@@ -17,3 +17,5 @@ define("key",md5("ITCG_debug_date",false));
 class Config
 {
 }
+
+

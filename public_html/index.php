@@ -14,7 +14,7 @@
 
     $app = AppFactory::create();
 
-    $app->addErrorMiddleware(true, true, true);
+    //$app->addErrorMiddleware(false, false, false);
 
     $app->get('/', function (Request $request, Response $response) {
         return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response);
@@ -94,6 +94,23 @@
             }
         });
 
+        
+        $group->get('/DetalleDepCar', function (Request $request, Response $response) {
+            try {
+                $bd = new DB();
+                $data=$bd->getCategoriaDetalleDepCar();
+            } catch (Exception $e) {
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            }
+        });
+        
         //Empleados
         //Obtener todos los empleados
         $group->get('/empleados', function (Request $request, Response $response) {
@@ -340,7 +357,7 @@
         });
 
     });
-/* 
+
     $app->group('/Movimientos', function (RouteCollectorProxy $group) use ($app) {
 
         $group->get('/Catalagos_Proyecto', function (Request $request, Response $response) {
@@ -360,9 +377,62 @@
 
 
 
+        //Insertar Periodo Terminado
+        $group->post('/Catalagos_Proyecto', function (Request $request, Response $response) {
+            try {
+                $bd = new DB();
+                $data = array();
+                $idcategoria=$_POST['idcategoria'];
+                $nombres_proyecto=$_POST['nombres_proyecto'];
+                $credito=$_POST['credito'];
+                $horassemanales=$_POST['horassemanales'];
+                $estatus=$_POST['estatus'];
+                $oficioautorizacion=$_FILES['oficioautorizacion'];
+                $filename=$_FILES['oficioautorizacion']['name'];
+                $typefile=$_FILES['oficioautorizacion']['type'];
 
 
-    }); */
+                $data=$bd->insertCatalagoProyectos($idcategoria, $nombres_proyecto,$filename,$typefile, $oficioautorizacion, $credito, $horassemanales, $estatus);
+                var_dump($data);
+                if($data['error']){
+                        $data["error"] = true;
+                        $data["message"] = "No update";
+                        $data["code"] = "2004";
+                    }else{
+                        $data = array();
+                        $data["error"] = false;
+                    }
+                    
+            } catch (Exception $e) {
+                
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+                //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            } 
+            var_dump("HOLA");
+        //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+        var_dump($data);
+        });
+
+        $group->get('/Alta_Proyectos', function (Request $request, Response $response) {
+            try {
+                $bd = new DB();
+                $data=$bd->getAltaProyectos();
+            } catch (Exception $e) {
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            }
+        });
+    }); 
 
 
 
