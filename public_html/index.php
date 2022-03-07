@@ -20,6 +20,17 @@
         return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response);
     });
 
+
+    $app->get('/Especial/Archivo', function (Request $request, Response $response, array $args) {
+        $bd = new DB();
+        $file=$bd->openfile($_REQUEST["id"]);
+        //header("Content-Type: application/pdf");
+        //header("Content-Disposition: inline; filename=documento.pdf");
+        var_dump($bd->openfile($_REQUEST["id"]));
+        //print ;
+        //return $response->withStatus(200)->withHeader('Content-Type', 'application/pdf');
+    });
+
     //Login del sistema 
     $app->get('/login', function (Request $request, Response $response) {
             try {
@@ -93,6 +104,23 @@
             try {
                 $bd = new DB();
                 $data=$bd->getCatalagoDepartemento();
+            } catch (Exception $e) {
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            }
+        });
+
+        //Obtener todos los departamtnos 
+        $group->get('/departamentos/JefeDepartamento', function (Request $request, Response $response) {
+            try {
+                $bd = new DB();
+                $data=$bd->getJefesDepartamentos();
             } catch (Exception $e) {
                 $data=array();
                 $data["error"] = true;
@@ -365,8 +393,7 @@
                 $data["code"] = "2003";
             } finally {
                 unset($bd);
-                var_dump($data);
-                //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
             }
         });
 
@@ -406,11 +433,10 @@
                 $data["code"] = "2003";
             } finally {
                 unset($bd);
-                //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
             } 
             var_dump("HOLA");
-        //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-        var_dump($data);
+        return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
         });
 
         $group->get('/Alta_Proyectos', function (Request $request, Response $response) {

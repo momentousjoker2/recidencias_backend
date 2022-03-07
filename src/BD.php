@@ -110,6 +110,28 @@ class DB
             return $data;
         }    
     }
+        //Departamentos Terminados 
+    public function getJefesDepartamentos(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT d.*,e.nom_pers,e.id_pers FROM deptos as d INNER JOIN empleado as e on d.ID_DEPTO = e.id_depto WHERE e.puesto = "JefeDepartamento"; ');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass;
+                $datos->id_depto=$row['ID_DEPTO'];
+                $datos->nom_depto=$row['NOM_DEPTO'];
+                $datos->id_pers=$row['id_pers'];
+                $datos->nom_pers=$row['nom_pers'];
+                $data[] = $datos;
+            }
+        }catch(Exception $e){
+                $data['error']=true;
+                $data['error_mensaje']=$e->getMessage();
+        }finally{
+            return $data;
+        }    
+    }
+
 
     //Empleados Terminado 
     public function getCatalagoEmpleados(): array {
@@ -294,14 +316,13 @@ class DB
     public function  getCatalagoProyectos(): array {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('SELECT ca.idCatActividades as "id",  (SELECT c.idCategoria FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "idcategoria", (SELECT c.nombre FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "categoria", ca.nombresproyecto as "nombre",  ca.file as "oficio",ca.filename as "filename",ca.contentype as "contentype",ca.numerocredito as "credito",ca.horassemanales as "horassemanales",ca.estado FROM catActividades as ca');
+            $stmt = $this->pdo->prepare('SELECT ca.idCatActividades as "id",  (SELECT c.idCategoria FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "idcategoria", (SELECT c.nombre FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "categoria", ca.nombresproyecto as "nombre",   ca.filename as "filename",ca.numerocredito as "credito",ca.horassemanales as "horassemanales",ca.estado FROM catActividades as ca');
             $stmt->execute();
             foreach ($stmt as $row) {
                 $datos = new stdClass();
                 $datos->idactividad = $row['id'];
                 $datos->categoria = ["id"=>$row['idcategoria'],"nombre"=>$row['categoria']];
                 $datos->nombres_proyecto = $row['nombre'];
-                $datos->oficioautorizacion = ["filename"=>$row['filename'],"contentype"=>$row['contentype'],"oficio"=>$row['oficio']];
                 $datos->credito = $row['credito'];
                 $datos->horassemanales = $row['horassemanales'];
                 $datos->estado = $row['estado'];
@@ -319,7 +340,7 @@ class DB
     public function  insertCatalagoProyectos(String $idCategoria, String $nombres_proyecto,String $filename,String $contentype, $oficioautorizacion, String $credito, String $horassemanales, String $status) {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('INSERT INTO proyectos ( idcategoria, nombres_proyecto,filename,contentype, oficioautorizacion, credito, horassemanales,  estado ) VALUES (:idcategoria, :nombres_proyecto,:filename,:contentype, :oficioautorizacion, :credito, :horassemanales, :estatus )');
+            $stmt = $this->pdo->prepare('INSERT INTO catActividades ( idcategoria, nombresproyecto,filename,contentype, file, numerocredito, horassemanales,  estado ) VALUES (:idcategoria, :nombres_proyecto,:filename,:contentype, :oficioautorizacion, :credito, :horassemanales, :estatus )');
             $stmt->bindParam(":idcategoria", $idCategoria);
             $stmt->bindParam(":nombres_proyecto", $nombres_proyecto);
             $stmt->bindParam(":filename", $filename);
@@ -337,6 +358,19 @@ class DB
         }
     } 
 
+    public function openfile($idCatalago) {
+        try{
+            $stmt = $this->pdo->prepare('SELECT file FROM catActividades WHERE idCatActividades = :idCatActividades');
+            $stmt->bindParam(":idCatActividades", $idCatActividades);
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $result=$row['file'];
+            }
+        } catch (PDOException $e) {
+        }finally{
+            return $result;
+        }
+    }
 
     public function getAltaProyectos():array{
         try{
