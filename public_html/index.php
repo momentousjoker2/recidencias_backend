@@ -20,17 +20,7 @@
         return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response);
     });
 
-    $app->post('/', function (Request $request, Response $response) {
-        $body = $request->getBody();
-        //$contents = json_decode(file_get_contents('php://input'), true);
-        var_dump($_POST);
-        var_dump($_FILES);
-        var_dump(file_get_contents('php://input'));
-        //var_dump(file_get_contents('php://input'));
-        return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response);
-    });
-
-    //Login del sistema TERMINADO
+    //Login del sistema 
     $app->get('/login', function (Request $request, Response $response) {
             try {
             $data = array();
@@ -59,7 +49,7 @@
 
     $app->group('/Catalagos', function (RouteCollectorProxy $group) use ($app) {
         //Carreras
-        //Obtener todos las carreras TERMINADO
+        //Obtener todos las carreras 
         $group->get('/carreras', function (Request $request, Response $response) {
             try {
                 $data = array();
@@ -76,8 +66,29 @@
             }
         });
 
+        $group->post('/carreras_update', function (Request $request, Response $response) {
+            try {
+               
+                $data = array();
+                $bd = new DB();
+
+                $idcar= $_REQUEST['idcar'];
+                $nombcar= $_REQUEST['nombrecar'];
+                $siglas= $_REQUEST['siglas'];
+                $idDeptos= $_REQUEST['idDeptos'];
+                $data=$bd->updateCatalagoCarreras($idcar,$nombcar,$siglas,$idDeptos);
+            } catch (Exception $e) {
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            }
+        });
         //Departamento
-        //Obtener todos los departamtnos Terminado
+        //Obtener todos los departamtnos 
         $group->get('/departamentos', function (Request $request, Response $response) {
             try {
                 $bd = new DB();
@@ -94,23 +105,6 @@
             }
         });
 
-        
-        $group->get('/DetalleDepCar', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCategoriaDetalleDepCar();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-        
         //Empleados
         //Obtener todos los empleados
         $group->get('/empleados', function (Request $request, Response $response) {
@@ -128,7 +122,7 @@
             }
         });
 
-        //Cambiar contrase;a de empleados Terminado
+        //Cambiar contrase;a de empleados VERIFICAR AQUI
         $group->post('/empleados_password', function (Request $request, Response $response) {
             try {
                 $bd = new DB();
@@ -371,7 +365,8 @@
                 $data["code"] = "2003";
             } finally {
                 unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                var_dump($data);
+                //return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
             }
         });
 
