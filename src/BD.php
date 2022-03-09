@@ -179,15 +179,25 @@ class DB
             $stmt = $this->pdo->prepare('SELECT es.nc as "ID",CONCAT(es.nomalu," ",es.ap," ",es.am) as "Nombre" ,es.semestre, (SELECT c.nombcar FROM carreras as c where c.idcar = es.idcar) as "Carrera" FROM estudiantes as es; ');
             $stmt->execute();
             foreach ($stmt as $row) {
+                $categorias = array();
                 $datos = new stdClass;
                 $datos->ID = $row['ID'];
                 $datos->Nombre = $row['Nombre'];
                 $datos->semestre = $row['semestre'];
                 $datos->Carrera = $row['Carrera'];
+                $stmt2 = $this->pdo->prepare('SELECT c.nombre, (SELECT COUNT(*) as contador FROM registroactividades as r INNER JOIN actividades as a ON r.idactividad = a.idactividaactiva INNER JOIN catActividades as ca ON a.idcatalagoproyectos = ca.idCatActividades INNER JOIN categoria as c ON ca.idcategoria = c.idcategoria WHERE r.idrstudiante = :idAlumno AND r.estado = "Terminado" AND ca.idcategoria = c.idCategoria) as "Contador" FROM categoria as c; ');                    
+                $stmt2->bindParam(":idAlumno", $datos->ID);
+                $stmt2->execute();
+                foreach ($stmt2 as $row2) {
+                    $categoria = new stdClass;
+                    $categoria->Nombre = $row2['nombre'];
+                    $categoria->Contador = $row2['Contador'];
+                    $categorias[]=$categoria;
+                }
+                $datos->categorias = $categorias;
                 $data[] = $datos;
             }
         }catch(Exception $e){
-            var_dump($e->getMessage());
             $data['error']=true;
             $data['mensaje']=$e->getMessage();
         }finally{
