@@ -23,6 +23,7 @@
 
     $app->get('/Especial/Archivo', function (Request $request, Response $response, array $args) {
         $bd = new DB();
+        $oficioautorizacion=$_FILES['oficioautorizacion'];
         $file=$bd->openfile($_REQUEST["id"]);
         //header("Content-Type: application/pdf");
         //header("Content-Disposition: inline; filename=documento.pdf");
@@ -30,6 +31,7 @@
         //print ;
         //return $response->withStatus(200)->withHeader('Content-Type', 'application/pdf');
     });
+
 
     //Login del sistema 
     $app->get('/login', function (Request $request, Response $response) {
@@ -57,6 +59,42 @@
             return echoResponse(200, json_encode($data, JSON_FORCE_OBJECT), $response);
         }
     });
+
+    $app->group('/catalagos', function (RouteCollectorProxy $catalagos) use ($app) {
+        $catalagos->group('/alumnos', function (RouteCollectorProxy $alumnos) use ($app) {
+            $alumnos->get('', function (Request $request, Response $response) {
+                try {            
+                    $bd = new DB();
+                    $data=$bd->getCatalagoEstudiantes();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+            $alumnos->get('{categoria}', function (Request $request, Response $response, array $args) {
+                try {            
+                    $bd = new DB();
+                    $categoria = $args['categoria'];
+                    $data=$bd->getCatalagoEstudiantes($categoria);
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+        });
+    });
+
+
 
     $app->group('/Catalagos', function (RouteCollectorProxy $group) use ($app) {
         //Carreras
@@ -409,13 +447,14 @@
                 $credito=$_POST['credito'];
                 $horassemanales=$_POST['horassemanales'];
                 $estatus=$_POST['estatus'];
-                $oficioautorizacion=$_FILES['oficioautorizacion'];
+                $binario_nombre_temporal=$_FILES['oficioautorizacion']['tmp_name'] ;
+                //$binario_contenido = addslashes(fread(fopen($binario_nombre_temporal, "rb"), filesize($binario_nombre_temporal)));
+                $binario_contenido = (file_get_contents($binario_nombre_temporal));
                 $filename=$_FILES['oficioautorizacion']['name'];
                 $typefile=$_FILES['oficioautorizacion']['type'];
 
 
-                $data=$bd->insertCatalagoProyectos($idcategoria, $nombres_proyecto,$filename,$typefile, $oficioautorizacion, $credito, $horassemanales, $estatus);
-                var_dump($data);
+                $data=$bd->insertCatalagoProyectos($idcategoria, $nombres_proyecto,$filename,$typefile, $binario_contenido, $credito, $horassemanales, $estatus);
                 if($data['error']){
                         $data["error"] = true;
                         $data["message"] = "No update";
@@ -435,7 +474,6 @@
                 unset($bd);
                 return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
             } 
-            var_dump("HOLA");
         return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
         });
 

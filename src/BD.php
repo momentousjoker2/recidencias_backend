@@ -19,7 +19,7 @@ class DB
             $data = array();
             $user['error']=false;
 
-            $stmt = $this->pdo->prepare("SELECT e.nc as 'username' , CONCAT(e.nomalu,' ',e.ap,' ',e.am) as 'nombre','Estudiante' as rol from estudiantes as e WHERE e.nc = :username && e.password = :password ;");
+            $stmt = $this->pdo->prepare("SELECT e.nc AS 'username' , CONCAT(e.nomalu,' ',e.ap,' ',e.am) AS 'nombre','Estudiante' AS rol ,d.ID_DEPTO  FROM estudiantes AS e INNER JOIN carreras AS c ON c.idcar = e.Idcar  INNER JOIN deptos AS d ON c.idDeptos = d.ID_DEPTO WHERE e.nc = :username && e.password = :password;");
             $stmt->bindParam(":username", $username);
             $stmt->bindParam(":password", $password);
             $stmt->execute();
@@ -29,7 +29,7 @@ class DB
                 $user['error']=false;
 
             }else{
-                $stmt = $this->pdo->prepare("SELECT e.id_pers as 'username' ,e.nom_pers as 'nombre', e.Puesto  as 'rol' from empleado as e where e.id_pers = :username  && e.pwd = :password");
+                $stmt = $this->pdo->prepare("SELECT e.id_pers as 'username' ,e.nom_pers as 'nombre', e.Puesto  as 'rol' ,d.ID_DEPTO  from empleado as e INNER JOIN deptos AS d ON e.id_depto = d.ID_DEPTO where e.id_pers = :username  && e.pwd = :password");
                 $stmt->bindParam(":username", $username);
                 $stmt->bindParam(":password", $password);
                 $stmt->execute();
@@ -45,6 +45,7 @@ class DB
             $data['username']=$user['username'];
             $data['nombre']=$user['nombre'];
             $data['rol']=$user['rol'];
+            $data['ID_DEPTO']=$user['ID_DEPTO'];
             $data['error']=$user['error'];
         }catch(Exception $e){
                     $data['error']=true;
@@ -172,7 +173,7 @@ class DB
         }    
     }
 
-    //Estudiantes Termiandos 
+        //Estudiantes Termiandos 
     public function  getCatalagoEstudiantes(): array {
         try{
             $data = array();
