@@ -1,10 +1,16 @@
 <?php
-//Base de datos general
+//Base de datos general 
+
 define("HostDB","mysql-jessicajazmin.alwaysdata.net" );
 define("UserNameDB","242175_admin" );
 define("PasswordDB","Gonzarom21" );
 define("NameDB","jessicajazmin_creditos" );
-
+/*
+define("HostDB","localhost:8082" );
+define("UserNameDB","root" );
+define("PasswordDB","" );
+define("NameDB","jessicajazmin_creditos" );
+*/
 //Base de datos itcg
 define("HostDBITCG","mysql-jessicajazmin.alwaysdata.net" );
 define("UserNameDBITCG","242175_admin" );

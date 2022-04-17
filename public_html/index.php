@@ -14,24 +14,7 @@
 
     $app = AppFactory::create();
 
-    //$app->addErrorMiddleware(false, false, false);
-
-    $app->get('/', function (Request $request, Response $response) {
-        return echoResponse(200, json_encode(array("data" => "Ruta equivocada",), JSON_FORCE_OBJECT), $response);
-    });
-
-
-    $app->get('/Especial/Archivo', function (Request $request, Response $response, array $args) {
-        $bd = new DB();
-        $oficioautorizacion=$_FILES['oficioautorizacion'];
-        $file=$bd->openfile($_REQUEST["id"]);
-        //header("Content-Type: application/pdf");
-        //header("Content-Disposition: inline; filename=documento.pdf");
-        var_dump($bd->openfile($_REQUEST["id"]));
-        //print ;
-        //return $response->withStatus(200)->withHeader('Content-Type', 'application/pdf');
-    });
-
+    $app->addErrorMiddleware(false, false, false);
 
     //Login del sistema 
     $app->get('/login', function (Request $request, Response $response) {
@@ -62,7 +45,7 @@
 
     $app->group('/catalagos', function (RouteCollectorProxy $catalagos) use ($app) {
         $catalagos->group('/alumnos', function (RouteCollectorProxy $alumnos) use ($app) {
-            $alumnos->get('', function (Request $request, Response $response) {
+            $alumnos->get('/administrador', function (Request $request, Response $response) {
                 try {            
                     $bd = new DB();
                     $data=$bd->getCatalagoEstudiantes();
@@ -76,10 +59,10 @@
                     return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
                 }
             });
-            $alumnos->get('{categoria}', function (Request $request, Response $response, array $args) {
+            $alumnos->get('/categorias', function (Request $request, Response $response, array $args) {
                 try {            
                     $bd = new DB();
-                    $categoria = $args['categoria'];
+                    $categoria = $_REQUEST['categoria'];
                     $data=$bd->getCatalagoEstudiantes($categoria);
                 } catch (Exception $e) {
                     $data=array();
