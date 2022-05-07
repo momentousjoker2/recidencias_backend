@@ -13,7 +13,6 @@ class DB
         $this->pdo = $this->db->createConnexicon();
     }
 
-    //Login Terminado 
     function login(String $username, String $password):array{
         try{
             $data = array();
@@ -51,14 +50,12 @@ class DB
         }finally{
             return $data;
         }
-    }
+    }    
 
-    
-
-    function getAlumnosforDepto(String $depto){
+    function getAlumnos(){
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('SELECT es.nc as "ID",CONCAT(es.nomalu," ",es.ap," ",es.am) as "Nombre" ,es.semestre as "Carrera" FROM estudiantes as es ; ');
+            $stmt = $this->pdo->prepare('SELECT es.nc as "ID", CONCAT(es.nomalu," ",es.ap," ",es.am) as "Nombre" , es.semestre as "semestre", c.nombcar as "nombre_car" FROM estudiantes as es INNER JOIN carreras as c ON es.Idcar = c.idcar ');
             $stmt->execute();
             foreach ($stmt as $row) {
                 $categorias = array();
@@ -66,7 +63,7 @@ class DB
                 $datos->ID = $row['ID'];
                 $datos->Nombre = $row['Nombre'];
                 $datos->semestre = $row['semestre'];
-                $datos->Carrera = $row['Carrera'];
+                $datos->Carrera=$row['nombre_car'];
                 $stmt2 = $this->pdo->prepare('SELECT c.nombre, (SELECT COUNT(*) as contador FROM registroactividades as r INNER JOIN actividades as a ON r.idactividad = a.idactividaactiva INNER JOIN catActividades as ca ON a.idcatalagoproyectos = ca.idCatActividades INNER JOIN categoria as c ON ca.idcategoria = c.idcategoria WHERE r.idrstudiante = :idAlumno AND r.estado = "Terminado" AND ca.idcategoria = c.idCategoria) as "Contador" FROM categoria as c; ');                    
                 $stmt2->bindParam(":idAlumno", $datos->ID);
                 $stmt2->execute();
@@ -87,37 +84,7 @@ class DB
         } 
     }
 
-    function getAlumno(String $id){
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //Carreras Terminadas 
-    public function getCatalagoCarreras(): array {
+    public function getCarreras(): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('SELECT c.idcar,c.nombcar,c.siglas,c.idDeptos,d.NOM_DEPTO FROM carreras as c INNER JOIN deptos as d on c.idDeptos = d.ID_DEPTO');
@@ -138,7 +105,7 @@ class DB
         }
     }
 
-    public function updateCatalagoCarreras(String $idcar,String $nombcar,String $siglas,String $idDeptos): array {
+    public function updateCarreras(String $idcar,String $nombcar,String $siglas,String $idDeptos): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('UPDATE carreras SET nombcar = :nombcar , siglas = :siglas , idDeptos = :idDeptos WHERE idcar = :idcar ');
@@ -154,8 +121,8 @@ class DB
             return $data;
         }    
     }
-    //Departamentos Terminados 
-    public function getCatalagoDepartemento(): array {
+
+    public function getDepartemento(): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('SELECT * FROM deptos');
@@ -173,18 +140,39 @@ class DB
             return $data;
         }    
     }
-        //Departamentos Terminados 
-    public function getJefesDepartamentos(): array {
+
+    public function getEmpleatosDepartamento(): array {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('SELECT d.*,e.nom_pers,e.id_pers FROM deptos as d INNER JOIN empleado as e on d.ID_DEPTO = e.id_depto WHERE e.puesto = "JefeDepartamento"; ');
+            $stmt = $this->pdo->prepare('SELECT * from deptos;  ');
             $stmt->execute();
             foreach ($stmt as $row) {
+                $jefedepartamento = array();
+                $empleados = array();
                 $datos = new stdClass;
                 $datos->id_depto=$row['ID_DEPTO'];
                 $datos->nom_depto=$row['NOM_DEPTO'];
-                $datos->id_pers=$row['id_pers'];
-                $datos->nom_pers=$row['nom_pers'];
+                $stmt2 = $this->pdo->prepare('SELECT e.id_pers,e.nom_pers,e.puesto FROM empleado as e  WHERE e.puesto != "JefeDepartamento"  AND e.id_depto = :depto');
+                $stmt2->bindParam(":depto", $row['ID_DEPTO']);
+                $stmt2->execute();
+                foreach ($stmt2 as $row2) {
+                    $empleado = new stdClass;
+                    $empleado->id_pers = $row2['id_pers'];
+                    $empleado->nom_pers = $row2['nom_pers'];
+                    $empleado->puesto = $row2['puesto'];
+                    $empleados[]=$empleado;
+                }
+                $datos->empleados = $empleados;
+                $stmt3 = $this->pdo->prepare('SELECT e.id_pers,e.nom_pers,e.puesto FROM empleado as e  WHERE e.puesto = "JefeDepartamento"  AND e.id_depto = :depto');
+                $stmt3->bindParam(":depto", $row['ID_DEPTO']);
+                $stmt3->execute();
+                $registro = $stmt3->fetch(PDO::FETCH_ASSOC);                
+                $empleado = new stdClass;                
+                $empleado->id_pers = $registro['id_pers'];
+                $empleado->nom_pers = $registro['nom_pers'];
+                $empleado->puesto = $registro['puesto'];
+
+                $datos->jefedepartamento = $empleado;
                 $data[] = $datos;
             }
         }catch(Exception $e){
@@ -195,12 +183,10 @@ class DB
         }    
     }
 
-
-    //Empleados Terminado 
-    public function getCatalagoEmpleados(): array {
+    public function getEmpleados(): array {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare('SELECT em.id_pers as "ID", em.nom_pers as "Nombre",(SELECT d.nom_depto FROM deptos as d WHERE d.id_depto=em.id_depto) as Departamento,em.puesto as "puesto" from empleado as em; ');
+            $stmt = $this->pdo->prepare('SELECT em.id_pers as "ID", em.nom_pers as "Nombre",(SELECT d.nom_depto FROM deptos as d WHERE d.id_depto=em.id_depto) as Departamento,IF(em.puesto="JefeDepartamento","Jefe de Departamento",em.puesto) as "puesto" from empleado as em;');
             $stmt->execute();
             foreach ($stmt as $row) {
                 $datos = new stdClass;
@@ -220,23 +206,7 @@ class DB
         }    
     }
 
-    //Update Password empleados Termiandos 
-    public function updatePasswordEmpleados($ID,$password): array {
-        try{
-            $data = array();
-            $stmt = $this->pdo->prepare('UPDATE empleado SET pwd=:pwd WHERE id_pers =:ID_PERS ');
-            $stmt->bindParam(":pwd", $password);
-            $stmt->bindParam(":ID_PERS", $ID);
-            $data["error"]=!$stmt->execute();
-        }catch(Exception $e){
-            $data['error']=true;
-        }finally{
-            return $data;
-        }    
-    }
-
-        //Estudiantes Termiandos 
-    public function  getCatalagoEstudiantes(): array {
+    public function  getEstudiantes(): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('SELECT es.nc as "ID",CONCAT(es.nomalu," ",es.ap," ",es.am) as "Nombre" ,es.semestre, (SELECT c.nombcar FROM carreras as c where c.idcar = es.idcar) as "Carrera" FROM estudiantes as es; ');
@@ -268,24 +238,7 @@ class DB
         }    
     }
 
-    //Update Password Estudiantes Termiandos 
-    public function updatePasswordEstudiantes($ID,$password): array {
-        try{
-            $data = array();
-            $stmt = $this->pdo->prepare('UPDATE estudiantes SET password=:password WHERE nc =:nc ');
-            $stmt->bindParam(":password", $password);
-            $stmt->bindParam(":nc", $ID);
-            $stmt->execute();
-            $data["error"]=!$stmt->execute();
-        }catch(Exception $e){
-            $data['error']=true;
-        }finally{
-            return $data;
-        }     
-    }
-
-    //Categorias Terminadas probar
-    public function  getCatalagoCategoria(): array {
+    public function  getCategoria(): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('SELECT * FROM categoria');
@@ -304,7 +257,6 @@ class DB
         }     
     }
 
-    //Insert a categorias terminado
     public function  insertCategorias(String $nombre,String $descripcion):array {
         try {
 
@@ -319,7 +271,7 @@ class DB
             return $data;
         }
     }
-    //update a categorias terminado
+
     public function  updateCategoria(String $idCategoria,String $nombre,String $descripcion):array {
         try {
             $stmt = $this->pdo->prepare('UPDATE categoria SET nombre = :nombre , descripcion = :descripcion WHERE idcategoria = :idCategoria');
@@ -335,8 +287,7 @@ class DB
         }
     }
 
-    //categoria probar
-    public function  getCatalagoPeriodo(): array {
+    public function  getPeriodo(): array {
         try{
             $data = array();
             $stmt = $this->pdo->prepare('SELECT * FROM periodo');
@@ -356,7 +307,26 @@ class DB
         }
     }
 
-    // insertar periodo probar
+    public function  getPeriodoActivos(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT * FROM periodo WHERE estado = "ABIERTO" ');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idperiodo = $row['idperiodo'];
+                $datos->nombre = $row['nombre'];
+                $datos->status=$row['estado'];
+                $data[] = $datos;
+            }
+
+        } catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
+        }
+    }
+
     public function  insertPeriodo(String $nombre,String $status):array {
         try {
             $stmt = $this->pdo->prepare('INSERT INTO periodo(nombre,estado) value (:nombre,:estado) ');
@@ -369,8 +339,7 @@ class DB
             return $data;
         }
     }
-    
-    //update a periodo terminado
+
     public function  updatePeriodo(String $idperiodo,String $nombre,String $status):array {
         try {
             $stmt = $this->pdo->prepare('UPDATE periodo SET nombre = :nombre , estado = :status WHERE idperiodo = :idperiodo');
@@ -385,7 +354,6 @@ class DB
         }
     }
 
-    //categoria probar
     public function  getCatalagoProyectos(): array {
         try{
             $data = array();
@@ -409,7 +377,29 @@ class DB
         }
     }
 
-    //categoria probar
+    public function  getCatalagoProyectosActivos(): array {
+        try{
+            $data = array();
+            $stmt = $this->pdo->prepare('SELECT ca.idCatActividades as "id", (SELECT c.idCategoria FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "idcategoria", (SELECT c.nombre FROM categoria as c WHERE c.idCategoria = ca.idcategoria) as "categoria", ca.nombresproyecto as "nombre", ca.filename as "filename",ca.numerocredito as "credito",ca.horassemanales as "horassemanales",ca.estado FROM catActividades as ca WHERE ca.estado = "ACTIVO"; ');
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idactividad = $row['id'];
+                $datos->categoria = ["id"=>$row['idcategoria'],"nombre"=>$row['categoria']];
+                $datos->nombres_proyecto = $row['nombre'];
+                $datos->credito = $row['credito'];
+                $datos->horassemanales = $row['horassemanales'];
+                $datos->estado = $row['estado'];
+                $data[] = $datos;
+            }
+        } catch (PDOException $e) {
+            $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
+        }finally{
+            return $data;
+        }
+    }
+
     public function  insertCatalagoProyectos(String $idCategoria, String $nombres_proyecto,String $filename,String $contentype, $oficioautorizacion, String $credito, String $horassemanales, String $status) {
         try{
             $data = array();
@@ -431,65 +421,99 @@ class DB
         }
     } 
 
-    public function openfile($idCatalago) {
+    public function  updateCatalagoProyecto(String $idCatActividades, String $estado) {
         try{
-            $stmt = $this->pdo->prepare('SELECT file FROM catActividades WHERE idCatActividades = :idCatActividades');
+            $data = array();
+            $stmt = $this->pdo->prepare('UPDATE catActividades SET  estado = :estado WHERE idCatActividades = :idCatActividades');
             $stmt->bindParam(":idCatActividades", $idCatActividades);
-            $stmt->execute();
-            foreach ($stmt as $row) {
-                $result=$row['file'];
-            }
+            $stmt->bindParam(":estado", $estado);
+            $data['error']=!$stmt->execute();
         } catch (PDOException $e) {
+            $data["error"]=true;
+            $data["error_message"]=$e->getMessage();
         }finally{
-            return $result;
+            return $data;
+        }
+    } 
+
+    public function  insertProyectoActivos(String $idCatalagoProyectos, String $idDeptos,String $idJefeDeptos,String $idPersonalResponsable, $horaInicio, String $horaFin, String $idPeriodo, String $fechaInicio,String $fechaCierre, String $numeroAlumnos, String $estado) {
+        try {
+            $stmt = $this->pdo->prepare('INSERT INTO actividades( idCatalagoProyectos, idDeptos, idJefeDeptos, idPersonalResponsable, horaInicio, horaFin, idPeriodo, fechaInicio, fechaCierre, numeroAlumnos, estado) VALUES (:idCatalagoProyectos, :idDeptos, :idJefeDeptos, :idPersonalResponsable, :horaInicio, :horaFin, :idPeriodo, :fechaInicio, :fechaCierre, :numeroAlumnos, :estado)');
+            $stmt->bindParam(":idCatalagoProyectos", $idCatalagoProyectos);
+            $stmt->bindParam(":idDeptos", $idDeptos);
+            $stmt->bindParam(":idJefeDeptos", $idJefeDeptos);
+            $stmt->bindParam(":idPersonalResponsable", $idPersonalResponsable);
+            $stmt->bindParam(":horaInicio", $horaInicio);
+            $stmt->bindParam(":horaFin", $horaFin);
+            $stmt->bindParam(":idPeriodo", $idPeriodo);
+            $stmt->bindParam(":fechaInicio", $fechaInicio);
+            $stmt->bindParam(":fechaCierre", $fechaCierre);
+            $stmt->bindParam(":numeroAlumnos", $numeroAlumnos);
+            $stmt->bindParam(":estado", $estado);
+        
+            //$data["error"]=
+            var_dump($stmt->execute());
+            
+        }  catch (PDOException $e) {
+            $data["error"]=true;
+        }finally{
+            return $data;
         }
     }
 
-    public function getAltaProyectos():array{
+    public function  getProyectoActivos(): array {
         try{
             $data = array();
-            $stmt = $this->pdo->prepare("SELECT a.idactivida, (SELECT d.id_depto from departamentos as d WHERE d.id_depto = a.iddepartamento) as 'id_departamento' , (SELECT d.nom_depto from departamentos as d WHERE d.id_depto = a.iddepartamento) as 'nombre_departamento', (SELECT e.id_pers from empleado as e WHERE e.id_pers = a.idjefedepartemnto) as 'id_jefedepartamento', (SELECT e.nom_pers from empleado as e WHERE e.id_pers = a.idjefedepartemnto) as 'nombre_jefedepartamento', (SELECT e.id_pers from empleado as e WHERE e.id_pers = a.idpersonalresponsable) as 'id_responsable', (SELECT e.nom_pers from empleado as e WHERE e.id_pers = a.idpersonalresponsable) as 'nombre_responsable', a.horainicio, a.horafin, (SELECT p.idperiodo FROM periodo as p WHERE p.idperiodo = a.idperiodo) as 'id_periodo', (SELECT p.nombre FROM periodo as p WHERE p.idperiodo = a.idperiodo) as 'nombre_periodo', a.fechainicio, a.fechacierre, a.numeroalumnos, a.estado FROM actividades as a");
+            $stmt = $this->pdo->prepare('Select A.idActividaActiva, cat.nombresproyecto , dep.NOM_DEPTO, jefe.nom_pers as "jefe",personal.nom_pers, A.horaInicio, A.horaFin, p.nombre as "periodo" , A.fechaInicio, A.fechaCierre, A.numeroAlumnos, A.estado from actividades as A INNER JOIN catActividades as cat ON cat.idCatActividades=A.idCatalagoProyectos INNER JOIN deptos as dep ON dep.ID_DEPTO=A.idDeptos INNER JOIN empleado as jefe ON jefe.id_pers=A.idJefeDeptos INNER JOIN empleado as personal ON personal.id_pers=A.idPersonalResponsable INNER JOIN periodo as p ON p.idperiodo = A.idPeriodo WHERE A.estado = "ACTIVO"; ');
             $stmt->execute();
             foreach ($stmt as $row) {
                 $datos = new stdClass();
-                $datos->idactivida = $row['idactivida'];
-                $datos->departemento = ["id_departamento"=>$row['id_departamento'],"nombre_departamento"=>$row['nombre_departamento']];
-                $datos->jefedepartamento = ["id_jefedepartamento"=>$row['id_jefedepartamento'],"nombre_jefedepartamento"=>$row['nombre_jefedepartamento']];
-                $datos->responsable = ["id_responsable"=>$row['id_responsable'],"nombre_responsable"=>$row['nombre_responsable']];
-                $datos->horainicio = $row['horainicio'];
-                $datos->horafin = $row['horafin'];
-                $datos->periodo = ["id_periodo"=>$row['id_periodo'],"nombre_periodo"=>$row['nombre_periodo']];
-                $datos->fechainicio = $row['fechainicio'];
-                $datos->fechacierre = $row['fechacierre'];
-                $datos->numeroalumnos = $row['numeroalumnos'];
-                $datos->estado = $row['estado'];
+                $datos->idActividaActiva= $row['idActividaActiva'];
+                $datos->nombresproyecto= $row['nombresproyecto'];
+                $datos->NOM_DEPTO= $row['NOM_DEPTO'];
+                $datos->jefe= $row['jefe'];
+                $datos->nom_pers= $row['nom_pers'];
+                $datos->horaInicio= $row['horaInicio'];
+                $datos->horaFin= $row['horaFin'];
+                $datos->periodo= $row['periodo'];
+                $datos->fechaInicio= $row['fechaInicio'];
+                $datos->fechaCierre= $row['fechaCierre'];
+                $datos->numeroAlumnos= $row['numeroAlumnos'];
+                $datos->estado= $row['estado'];
                 $data[] = $datos;
             }
-
         } catch (PDOException $e) {
             $data["error"]=true;
             $data["error_message"]=$e->getMessage();
         }finally{
             return $data;
         }
+
     }
-    
-    public function insertAltaProyecto(String $iddepartamento, String $idjefedepartemnto, String $idpersonalresponsable, String $horainicio, String $horafin, String $idperiodo, String $fechainicio, String $fechacierre, String $numeroalumnos, String $estado):array{
+
+    public function  getProyectoActivosInscripcion($iddepto): array {
         try{
-            $stmt = $this->pdo->prepare("INSERT INTO actividades(iddepartamento, idjefedepartemnto, idpersonalresponsable, horainicio, horafin, idperiodo, fechainicio, fechacierre, numeroalumnos, estado) VALUES (:iddepartamento, :idjefedepartemnto, :idpersonalresponsable, :horainicio, :horafin, :idperiodo, :fechainicio, :fechacierre, :numeroalumnos, :estado)");
-            $stmt->bindParam(":iddepartamento", $iddepartamento);
-            $stmt->bindParam(":idjefedepartemnto", $idjefedepartemnto);
-            $stmt->bindParam(":idpersonalresponsable", $idpersonalresponsable);
-            $stmt->bindParam(":horainicio", $horainicio);
-            $stmt->bindParam(":horafin", $horafin);
-            $stmt->bindParam(":idperiodo", $idperiodo);
-            $stmt->bindParam(":fechainicio", $fechainicio);
-            $stmt->bindParam(":fechacierre", $fechacierre);
-            $stmt->bindParam(":numeroalumnos", $numeroalumnos);
-            $stmt->bindParam(":estado", $estado);
-
-
-        }catch (PDOException $e) {
+            $data = array();
+            $stmt = $this->pdo->prepare('Select A.idActividaActiva, cat.nombresproyecto , dep.NOM_DEPTO, jefe.nom_pers as "jefe",personal.nom_pers, A.horaInicio, A.horaFin, p.nombre as "periodo" , A.fechaInicio, A.fechaCierre, A.numeroAlumnos, A.estado from actividades as A INNER JOIN catActividades as cat ON cat.idCatActividades=A.idCatalagoProyectos INNER JOIN deptos as dep ON dep.ID_DEPTO=A.idDeptos INNER JOIN empleado as jefe ON jefe.id_pers=A.idJefeDeptos INNER JOIN empleado as personal ON personal.id_pers=A.idPersonalResponsable INNER JOIN periodo as p ON p.idperiodo = A.idPeriodo WHERE A.estado = "ACTIVO" AND dep.ID_DEPTO = :iddepto; ');
+            $stmt->bindParam(":iddepto", $iddepto);
+            $stmt->execute();
+            foreach ($stmt as $row) {
+                $datos = new stdClass();
+                $datos->idActividaActiva= $row['idActividaActiva'];
+                $datos->nombresproyecto= $row['nombresproyecto'];
+                $datos->NOM_DEPTO= $row['NOM_DEPTO'];
+                $datos->jefe= $row['jefe'];
+                $datos->nom_pers= $row['nom_pers'];
+                $datos->horaInicio= $row['horaInicio'];
+                $datos->horaFin= $row['horaFin'];
+                $datos->periodo= $row['periodo'];
+                $datos->fechaInicio= $row['fechaInicio'];
+                $datos->fechaCierre= $row['fechaCierre'];
+                $datos->numeroAlumnos= $row['numeroAlumnos'];
+                $datos->estado= $row['estado'];
+                $data[] = $datos;
+            }
+        } catch (PDOException $e) {
             $data["error"]=true;
             $data["error_message"]=$e->getMessage();
         }finally{
@@ -497,5 +521,11 @@ class DB
         }
 
     }
+    
 
 }
+
+
+//   
+
+//

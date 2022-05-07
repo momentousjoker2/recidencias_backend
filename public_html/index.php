@@ -14,7 +14,7 @@
 
     $app = AppFactory::create();
 
-    $app->addErrorMiddleware(false, false, false);
+    $app->addErrorMiddleware(true, true, true);
 
     //Login del sistema 
     $app->get('/login', function (Request $request, Response $response) {
@@ -45,10 +45,11 @@
 
     $app->group('/catalagos', function (RouteCollectorProxy $catalagos) use ($app) {
         $catalagos->group('/alumnos', function (RouteCollectorProxy $alumnos) use ($app) {
-            $alumnos->get('/administrador', function (Request $request, Response $response) {
+
+            $alumnos->get('/', function (Request $request, Response $response, array $args) {
                 try {            
                     $bd = new DB();
-                    $data=$bd->getCatalagoEstudiantes();
+                    $data=$bd->getAlumnos();
                 } catch (Exception $e) {
                     $data=array();
                     $data["error"] = true;
@@ -59,11 +60,15 @@
                     return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
                 }
             });
-            $alumnos->get('/categorias', function (Request $request, Response $response, array $args) {
-                try {            
+        });
+
+        $catalagos->group('/carreras', function (RouteCollectorProxy $carreras) use ($app) {
+
+            $carreras->get('/', function (Request $request, Response $response) {
+                try {
+                    $data = array();
                     $bd = new DB();
-                    $categoria = $_REQUEST['categoria'];
-                    $data=$bd->getCatalagoEstudiantes($categoria);
+                    $data=$bd->getCarreras();
                 } catch (Exception $e) {
                     $data=array();
                     $data["error"] = true;
@@ -73,103 +78,459 @@
                     unset($bd);
                     return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
                 }
+            });
+
+            $carreras->post('/', function (Request $request, Response $response) {
+                try {
+                    $data = array();
+                    $bd = new DB();
+                    $idcar= $_REQUEST['idcar'];
+                    $nombcar= $_REQUEST['nombrecar'];
+                    $siglas= $_REQUEST['siglas'];
+                    $idDeptos= $_REQUEST['idDeptos'];
+                    $data=$bd->updateCarreras($idcar,$nombcar,$siglas,$idDeptos);
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+        });
+
+        $catalagos->group('/categoria', function (RouteCollectorProxy $categoria) use ($app) {
+
+            $categoria->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getCategoria();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $categoria->post('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = array();
+                    $nombre = $_REQUEST['nombre'];
+                    $description = $_REQUEST['descripcion'];
+                    $data=$bd->insertCategorias($nombre, $description);
+                        if($data['error']){
+                            $data = array();
+                            $data["error"] = true;
+                            $data["message"] = "No update";
+                            $data["code"] = "2004";
+                        }else{
+                            $data = array();
+                            $data["error"] = false;
+                    }
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $categoria->post('/update', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $id = $_REQUEST['id'];
+                    $nombre = $_REQUEST['nombre'];
+                    $description = $_REQUEST['description'];
+                    $data=$bd->updateCategoria($id,$nombre, $description);
+            
+                }catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode($data, JSON_FORCE_OBJECT), $response);
+                }
+            });
+        });    
+
+        $catalagos->group('/departamentos', function (RouteCollectorProxy $departamentos) use ($app) {
+
+            $departamentos->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getDepartemento();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+        });   
+
+        $catalagos->group('/empleados', function (RouteCollectorProxy $empleados) use ($app) {
+            $empleados->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = $bd->getEmpleados();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });  
+
+            $empleados->get('/EmpleadosDepartamentales', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getEmpleatosDepartamento();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });  
+
+
+        });
+
+        $catalagos->group('/periodo', function (RouteCollectorProxy $periodo) use ($app) {
+
+            $periodo->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getPeriodo();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $periodo->post('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = array();
+                        if (verifyRequiredParams($_REQUEST, 2)) {
+                            $Nombre = $_REQUEST['Nombre'];
+                            $Status = $_REQUEST['Status'];
+                            $data=$bd->insertPeriodo($Nombre, $Status);
+                            if($data['error']){
+                                $data = array();
+                                $data["error"] = true;
+                                $data["message"] = "No update";
+                                $data["code"] = "2004";
+                            }else{
+                                $data = array();
+                                $data["error"] = false;
+                            }
+                        }else {
+                            $data["error"] = true;
+                            $data["message"] = "Datos no aceptados";
+                            $data["code"] = "2000";
+                    }
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $periodo->post('/update', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getCatalagoProyectos();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $periodo->get('/Activas', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getPeriodoActivos();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+        }); 
+
+    });
+
+    $app->group('/movimientos', function (RouteCollectorProxy $movimientos) use ($app) {
+        $movimientos->group('/catalagos_proyecto', function (RouteCollectorProxy $Catalagos_Proyecto) use ($app) {
+            $Catalagos_Proyecto->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getCatalagoProyectos();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $Catalagos_Proyecto->post('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = array();
+                    $idcategoria=$_REQUEST['idcategoria'];
+                    $nombres_proyecto=$_REQUEST['nombres_proyecto'];
+                    $credito=$_REQUEST['credito'];
+                    $horassemanales=$_REQUEST['horassemanales'];
+                    $estatus=$_REQUEST['estado'];
+
+                    $binario_nombre_temporal=$_FILES['oficioautorizacion']['tmp_name'] ;
+                    $binario_contenido = (file_get_contents($binario_nombre_temporal));
+                    $filename=$_FILES['oficioautorizacion']['name'];
+                    $typefile=$_FILES['oficioautorizacion']['type'];
+
+
+                    $data=$bd->insertCatalagoProyectos($idcategoria, $nombres_proyecto,$filename,$typefile, $binario_contenido, $credito, $horassemanales, $estatus);
+                    if($data['error']){
+                            $data["error"] = true;
+                            $data["message"] = "No update";
+                            $data["code"] = "2004";
+                        }else{
+                            $data = array();
+                            $data["error"] = false;
+                        }
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }    
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            });
+
+            $Catalagos_Proyecto->post('/update', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = array();
+                    $idcategoria=$_REQUEST['idactividad'];
+
+                    $estatus=$_REQUEST['estado'];
+
+
+                    $data=$bd->updateCatalagoProyecto($idcategoria,$estatus);
+                    if($data['error']){
+                            $data["error"] = true;
+                            $data["message"] = "No update";
+                            $data["code"] = "2004";
+                        }else{
+                            $data = array();
+                            $data["error"] = false;
+                        }
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }    
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            });
+
+            $Catalagos_Proyecto->get('/Activos', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getCatalagoProyectosActivos();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+        });
+        
+        $movimientos->group('/proyectos_activos', function (RouteCollectorProxy $proyectos_activos) use ($app) {
+            $proyectos_activos->get('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data=$bd->getProyectoActivos();
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+            $proyectos_activos->get('/forDeptos', function (Request $request, Response $response) {
+                try {
+                    var_dump($_REQUEST);
+                    $iddepto=$_REQUEST['iddepto'];
+                    $bd = new DB();
+                    $data=$bd->getProyectoActivosInscripcion($iddepto);
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }
+            });
+
+
+
+            $proyectos_activos->post('/', function (Request $request, Response $response) {
+                try {
+                    $bd = new DB();
+                    $data = array();
+
+
+                    $idCatalagoProyectos =$_REQUEST['idCatalagoProyectos'];
+                    $idDeptos =$_REQUEST['idDeptos'];
+                    $idJefeDeptos =$_REQUEST['idJefeDeptos'];
+                    $idPersonalResponsable =$_REQUEST['idPersonalResponsable'];
+                    $horaInicio =$_REQUEST['horaInicio'];
+                    $horaFin =$_REQUEST['horaFin'];
+                    $idPeriodo =$_REQUEST['idPeriodo'];
+                    $fechaInicio =$_REQUEST['fechaInicio'];
+                    $fechaCierre =$_REQUEST['fechaCierre'];
+                    $numeroAlumnos =$_REQUEST['numeroAlumnos'];
+                    $estado =$_REQUEST['estado'];
+                    $data=$bd->insertProyectoActivos($idCatalagoProyectos,$idDeptos,$idJefeDeptos,$idPersonalResponsable, $horaInicio,$horaFin,$idPeriodo,$fechaInicio, $fechaCierre,$numeroAlumnos,$estado);
+                    if($data['error']){
+                            $data["error"] = true;
+                            $data["message"] = "No insert";
+                            $data["code"] = "2004";
+                        }else{
+                            $data = array();
+                            $data["error"] = false;
+                        }
+                } catch (Exception $e) {
+                    $data=array();
+                    $data["error"] = true;
+                    $data["message"] = $e->getMessage();
+                    $data["code"] = "2003";
+                } finally {
+                    unset($bd);
+                    return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+                }    
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
             });
         });
     });
 
+    //Funciones auxiliares
+    /**
+     * Compueba si al consumidor de la api tiene las credenciales necesarias
+     * @param array $hedear Hedear de la peticion http del cual se extrae los atributos el host y el Authorization
+     * @return array Regresa un arreglo llamado data el cual espesifica si contiene errores y cual el codigo de este mismo
+     */
+    function verifyRequiredParams(array $parametros, int $cont): bool{
+        $data = array();
+        foreach ($parametros as $field) {
+            if (isset($field)) {
+                if (ctype_print($field)) {
+                    if (!empty($field)) {
+                        $data[] = $field;
+                    }
+                }
+            }
+        }
+        if (count($data) == $cont)
+            return true;
+        else
+            return false;
+    }
 
+    function echoResponse(int $status_code, string $data, Response $response): Response{
+
+        $response->getBody()->write($data);
+        return $response->withStatus($status_code)->withHeader('Content-Type', 'application/json');
+    }
+
+
+    $app->run();
+
+
+/* 
+    $app->group('/Movimientos', function (RouteCollectorProxy $group) use ($app) {
+
+        //Insertar Periodo Terminado
+        $group
+
+        $group->get('/Alta_Proyectos', function (Request $request, Response $response) {
+            try {
+                $bd = new DB();
+                $data=$bd->getAltaProyectos();
+            } catch (Exception $e) {
+                $data=array();
+                $data["error"] = true;
+                $data["message"] = $e->getMessage();
+                $data["code"] = "2003";
+            } finally {
+                unset($bd);
+                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
+            }
+        });
+    }); 
 
     $app->group('/Catalagos', function (RouteCollectorProxy $group) use ($app) {
-        //Carreras
-        //Obtener todos las carreras 
-        $group->get('/carreras', function (Request $request, Response $response) {
-            try {
-                $data = array();
-                $bd = new DB();
-                $data=$bd->getCatalagoCarreras();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        $group->post('/carreras_update', function (Request $request, Response $response) {
-            try {
-               
-                $data = array();
-                $bd = new DB();
-
-                $idcar= $_REQUEST['idcar'];
-                $nombcar= $_REQUEST['nombrecar'];
-                $siglas= $_REQUEST['siglas'];
-                $idDeptos= $_REQUEST['idDeptos'];
-                $data=$bd->updateCatalagoCarreras($idcar,$nombcar,$siglas,$idDeptos);
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-        //Departamento
-        //Obtener todos los departamtnos 
-        $group->get('/departamentos', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCatalagoDepartemento();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Obtener todos los departamtnos 
-        $group->get('/departamentos/JefeDepartamento', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getJefesDepartamentos();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Empleados
-        //Obtener todos los empleados
-        $group->get('/empleados', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data = $bd->getCatalagoEmpleados();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
 
         //Cambiar contrase;a de empleados VERIFICAR AQUI
         $group->post('/empleados_password', function (Request $request, Response $response) {
@@ -201,22 +562,6 @@
             }
         });
 
-        //Empleados
-        //Obtener todos los estudiantes Terminado
-        $group->get('/estudiantes', function (Request $request, Response $response) {
-            try {            
-                $bd = new DB();
-                $data=$bd->getCatalagoEstudiantes();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
         //Cambiar contrase;a de estudiantes Terminado
         $group->post('/estudiantes_password', function (Request $request, Response $response) {
             try {
@@ -246,123 +591,6 @@
             }
         });
 
-        //Categoria
-        //Obtener todos las categorias Terminado
-        $group->get('/categoria', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCatalagoCategoria();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Insertar Categorias Terminado
-        $group->post('/categoria', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data = array();
-                    $nombre = $_REQUEST['nombre'];
-                    $description = $_REQUEST['descripcion'];
-                    $data=$bd->insertCategorias($nombre, $description);
-                    if($data['error']){
-                        $data = array();
-                        $data["error"] = true;
-                        $data["message"] = "No update";
-                        $data["code"] = "2004";
-                    }else{
-                        $data = array();
-                        $data["error"] = false;
-                }
-
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Actualizar Categorias Terminado
-        $group->post('/categoria_update', function (Request $request, Response $response){
-            try {
-                    $bd = new DB();
-                    $id = $_REQUEST['id'];
-                    $nombre = $_REQUEST['nombre'];
-                    $description = $_REQUEST['description'];
-                    $data=$bd->updateCategoria($id,$nombre, $description);
-            
-            }catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode($data, JSON_FORCE_OBJECT), $response);
-
-            }
-        
-        });
-
-        //Obtener periodo Terminado
-        $group->get('/periodo', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCatalagoPeriodo();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-        //Insertar Periodo Terminado
-        $group->post('/periodo', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data = array();
-                if (verifyRequiredParams($_REQUEST, 2)) {
-                    $Nombre = $_REQUEST['Nombre'];
-                    $Status = $_REQUEST['Status'];
-                    $data=$bd->insertPeriodo($Nombre, $Status);
-                    if($data['error']){
-                        $data = array();
-                        $data["error"] = true;
-                        $data["message"] = "No update";
-                        $data["code"] = "2004";
-                    }else{
-                        $data = array();
-                        $data["error"] = false;
-                    }
-                }else {
-                    $data["error"] = true;
-                    $data["message"] = "Datos no aceptados";
-                    $data["code"] = "2000";
-                }
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
 
         //Update periodo Terminado
         $group->post('/periodo_update', function (Request $request, Response $response){
@@ -399,270 +627,4 @@
             }
         });
 
-    });
-
-    $app->group('/Movimientos', function (RouteCollectorProxy $group) use ($app) {
-
-        $group->get('/Catalagos_Proyecto', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getCatalagoProyectos();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-
-
-
-        //Insertar Periodo Terminado
-        $group->post('/Catalagos_Proyecto', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data = array();
-                $idcategoria=$_POST['idcategoria'];
-                $nombres_proyecto=$_POST['nombres_proyecto'];
-                $credito=$_POST['credito'];
-                $horassemanales=$_POST['horassemanales'];
-                $estatus=$_POST['estatus'];
-                $binario_nombre_temporal=$_FILES['oficioautorizacion']['tmp_name'] ;
-                //$binario_contenido = addslashes(fread(fopen($binario_nombre_temporal, "rb"), filesize($binario_nombre_temporal)));
-                $binario_contenido = (file_get_contents($binario_nombre_temporal));
-                $filename=$_FILES['oficioautorizacion']['name'];
-                $typefile=$_FILES['oficioautorizacion']['type'];
-
-
-                $data=$bd->insertCatalagoProyectos($idcategoria, $nombres_proyecto,$filename,$typefile, $binario_contenido, $credito, $horassemanales, $estatus);
-                if($data['error']){
-                        $data["error"] = true;
-                        $data["message"] = "No update";
-                        $data["code"] = "2004";
-                    }else{
-                        $data = array();
-                        $data["error"] = false;
-                    }
-                    
-            } catch (Exception $e) {
-                
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            } 
-        return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-        });
-
-        $group->get('/Alta_Proyectos', function (Request $request, Response $response) {
-            try {
-                $bd = new DB();
-                $data=$bd->getAltaProyectos();
-            } catch (Exception $e) {
-                $data=array();
-                $data["error"] = true;
-                $data["message"] = $e->getMessage();
-                $data["code"] = "2003";
-            } finally {
-                unset($bd);
-                return echoResponse(200, json_encode(array("data" => $data), JSON_FORCE_OBJECT), $response);
-            }
-        });
-    }); 
-
-
-
-
-
-
-
-
-
-
-
-    /* 
-
-
-    $app->group('/Actividades', function (RouteCollectorProxy $group) use ($app) {
-        $group->post('/insert', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            
-            $IdDepartamento = $_REQUEST['IdDepartamento'];
-            $idJefeDepartamento = $_REQUEST['idJefeDepartamento'];
-            $IdPersonalResponsable = $_REQUEST['IdPersonalResponsable'];
-            $IdTipoProyecto = $_REQUEST['IdTipoProyecto'];
-            $Nombre_Proyecto = $_REQUEST['Nombre_Proyecto'];
-            $HorarioInicio = $_REQUEST['HorarioInicio'];
-            $HorarioFin = $_REQUEST['HorarioFin'];
-            $Periodo = $_REQUEST['Periodo'];
-            $FechaInicio = $_REQUEST['FechaInicio'];
-            $FechaCierre = $_REQUEST['FechaCierre'];
-            $Creditos = $_REQUEST['Creditos'];
-            $HorasSemanales = $_REQUEST['HorasSemanales'];
-            $noAlumnos = $_REQUEST['noAlumnos'];
-            $Estatus = $_REQUEST['Estatus'];
-            $OficioAutorizacion="";
-
-            try {
-                $request=$bd->insertActividad($IdDepartamento,$idJefeDepartamento,$IdPersonalResponsable,$IdTipoProyecto,$Nombre_Proyecto,$HorarioInicio,$HorarioFin,$Periodo,$OficioAutorizacion,$FechaInicio,$FechaCierre,$Creditos,$HorasSemanales,$noAlumnos,$Estatus);
-                return echoResponse(200, json_encode($request, JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                return echoResponse(200, json_encode($e->getMessage(), JSON_FORCE_OBJECT), $response);
-            } finally {
-                unset($bd);
-            }
-
-        });
-
-        $group->get('/All', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getAllActividades()), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    $app->group('/Solicitud', function (RouteCollectorProxy $group) use ($app) {
-        $group->post('/insert', function (Request $request, Response $response, array $args) {
-        });
-
-        $group->get('/get', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getAllSolicitudes()), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-
-        $group->get('/get/{id:[0-9]}', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getSolicitud($args['id'])), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-    });
-
-    $app->group('/Registar', function (RouteCollectorProxy $group) use ($app) {
-        $group->post('/insert', function (Request $request, Response $response, array $args) {
-        });
-        $group->get('/get', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getAllRegistar()), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-
-        $group->get('/get/{id:[0-9]}', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getRegistar($args['id'])), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-    });
-
-    $app->group('/Calificacion', function (RouteCollectorProxy $group) use ($app) {
-        $group->get('/insert', function (Request $request, Response $response, array $args) {
-        });
-
-        $group->get('/get', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getAllCalificacion()), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-
-        $group->get('/get/{id:[0-9]}', function (Request $request, Response $response, array $args) {
-            $bd = new DB();
-            try {
-                return echoResponse(200, json_encode(array("data" => $bd->getCalificacion($args['id'])), JSON_FORCE_OBJECT), $response);
-            } catch (Exception $e) {
-                echo 'Excepción capturada: ',  $e->getMessage(), "\n";
-            } finally {
-                unset($bd);
-            }
-        });
-    });
-    */
-
-    //Funciones auxiliares
-    /**
-     * Compueba si al consumidor de la api tiene las credenciales necesarias
-     * @param array $hedear Hedear de la peticion http del cual se extrae los atributos el host y el Authorization
-     * @return array Regresa un arreglo llamado data el cual espesifica si contiene errores y cual el codigo de este mismo
-     */
-
-
-    function verifyRequiredParams(array $parametros, int $cont): bool
-    {
-        $data = array();
-        foreach ($parametros as $field) {
-            if (isset($field)) {
-                if (ctype_print($field)) {
-                    if (!empty($field)) {
-                        $data[] = $field;
-                    }
-                }
-            }
-        }
-        if (count($data) == $cont)
-            return true;
-        else
-            return false;
-    }
-
-    function echoResponse(int $status_code, string $data, Response $response): Response
-    {
-
-        $response->getBody()->write($data);
-        return $response->withStatus($status_code)->withHeader('Content-Type', 'application/json');
-    }
-
-
-    $app->run();
+    }); */
